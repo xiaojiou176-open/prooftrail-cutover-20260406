@@ -231,7 +231,7 @@ jobs:
 
   hooks_equivalence_gate:
     needs: [changes]
-    if: ${{ github.repository_owner != 'xiaojiou176-open' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.ci_gatechain == 'true') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.ci_gatechain == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Pre-checkout workspace sanitize
@@ -311,6 +311,62 @@ jobs:
         with:
           mode: post
 
+  trivy_fs:
+    needs: [changes]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.ci_gatechain == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Pre-checkout workspace sanitize
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
+          home_dir="${HOME:-}"
+          case "$workspace" in
+            /|/.|/..|"")
+              echo "::error::refusing dangerous workspace path: $workspace"
+              exit 1
+              ;;
+          esac
+          if [[ -n "$home_dir" && "$workspace" == "$home_dir" ]]; then
+            echo "::error::refusing workspace equal to HOME: $workspace"
+            exit 1
+          fi
+          if [[ -d "$workspace" ]]; then
+            if command -v sudo >/dev/null 2>&1; then
+              sudo chown -R "$(id -u):$(id -g)" "$workspace" || true
+              sudo bash -lc 'shopt -s dotglob nullglob; rm -rf -- "$1"/* "$1"/.[!.]* "$1"/..?*' _ "$workspace" || true
+              sudo mkdir -p "$workspace" || true
+              sudo chown "$(id -u):$(id -g)" "$workspace" || true
+            else
+              chmod -R u+rwX "$workspace" || true
+              find "$workspace" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} + || true
+            fi
+          fi
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/workspace-sanitize
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: library
+          severity: HIGH,CRITICAL
+      - name: Upload failure bundle artifact
+        if: ${{ failure() || cancelled() }}
+        uses: ./.github/actions/failure-bundle
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post
+
   security:
     needs: [changes]
     runs-on: ubuntu-latest
@@ -346,16 +402,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/workspace-sanitize
-      - name: Secret scan (history audit, strict when license configured)
-        if: ${{ vars.GITLEAKS_LICENSE != '' }}
-        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ vars.GITLEAKS_LICENSE }}
-      - name: Skip history secret scan (no GITLEAKS_LICENSE configured)
-        if: ${{ vars.GITLEAKS_LICENSE == '' }}
-        run: |
-          echo "security history audit skipped: missing GITLEAKS_LICENSE repository variable"
+      - name: Secret scan (history audit, repo-owned gate)
+        run: bash scripts/ci/gitleaks-history-gate.sh
       - name: Upload failure bundle artifact
         if: ${{ failure() || cancelled() }}
         uses: ./.github/actions/failure-bundle

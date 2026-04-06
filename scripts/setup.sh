@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 export PYTHONDONTWRITEBYTECODE="${PYTHONDONTWRITEBYTECODE:-1}"
+# shellcheck source=scripts/lib/python-runtime.sh
 source "$ROOT_DIR/scripts/lib/python-runtime.sh"
 ensure_project_python_env_exports
 
@@ -38,5 +39,11 @@ fi
 CI="${CI:-true}" pnpm install --frozen-lockfile || CI="${CI:-true}" pnpm install --no-frozen-lockfile
 
 CI="${CI:-true}" pnpm --filter @prooftrail/automation-runner exec playwright install chromium
+
+if command -v pre-commit >/dev/null 2>&1; then
+  bash scripts/install-hooks.sh
+else
+  echo "warning: pre-commit not found in PATH; git hooks not installed. Install it first (e.g. uv tool install pre-commit) and rerun 'pnpm hooks:install'." >&2
+fi
 
 echo "setup complete"

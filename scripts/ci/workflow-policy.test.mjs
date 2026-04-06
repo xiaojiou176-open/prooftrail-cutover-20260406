@@ -31,20 +31,20 @@ const DESKTOP_SMOKE_WORKFLOW = readFileSync(
 )
 
 function getTopLevelPermissionsBlock(content) {
-  const match = content.match(/^permissions:\n([\s\S]*?)(?=^concurrency:|^jobs:|\Z)/m)
+  const match = content.match(/^permissions:\n([\s\S]*?)(?=^concurrency:|^jobs:|Z)/m)
   assert.ok(match, "expected workflow to declare top-level permissions")
   return match[1]
 }
 
 function getJobSection(content, jobName) {
   const lines = content.split(/\r?\n/)
-  const startIndex = lines.findIndex((line) => line === `  ${jobName}:`)
+  const startIndex = lines.indexOf(`  ${jobName}:`)
   assert.ok(startIndex !== -1, `expected workflow to contain job ${jobName}`)
 
   const collected = []
   for (let index = startIndex; index < lines.length; index += 1) {
     const line = lines[index]
-    if (index > startIndex && /^  [A-Za-z0-9_.-]+:$/.test(line)) {
+    if (index > startIndex && /^ {2}[A-Za-z0-9_.-]+:$/.test(line)) {
       break
     }
     collected.push(line)
@@ -55,7 +55,29 @@ function getJobSection(content, jobName) {
 
 test("mainline CI no longer triggers on pull_request", () => {
   assert.doesNotMatch(CI_WORKFLOW, /^\s+pull_request:/m)
-  assert.match(PR_WORKFLOW, /^  pull_request:/m)
+  assert.match(PR_WORKFLOW, /^ {2}pull_request:/m)
+})
+
+test("security workflows wire dependency review, trivy, zizmor, and repo-owned history scans", () => {
+  assert.match(
+    PR_WORKFLOW,
+    /actions\/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48/
+  )
+  assert.match(PR_WORKFLOW, /aquasecurity\/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1/)
+  assert.match(
+    PRECOMMIT_WORKFLOW,
+    /zizmorcore\/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8/
+  )
+  assert.match(CI_WORKFLOW, /bash scripts\/ci\/gitleaks-history-gate\.sh/)
+  assert.doesNotMatch(CI_WORKFLOW, /GITLEAKS_LICENSE/)
+})
+
+test("canonical owner still receives hooks equivalence gates", () => {
+  const precommitHooksGate = getJobSection(PRECOMMIT_WORKFLOW, "hooks-equivalence-gate")
+  const ciHooksGate = getJobSection(CI_WORKFLOW, "hooks_equivalence_gate")
+
+  assert.doesNotMatch(precommitHooksGate, /github\.repository_owner != 'xiaojiou176-open'/)
+  assert.doesNotMatch(ciHooksGate, /github\.repository_owner != 'xiaojiou176-open'/)
 })
 
 test("workflow top-level permissions default to contents: read only", () => {
@@ -68,8 +90,16 @@ test("workflow top-level permissions default to contents: read only", () => {
   ]) {
     const block = getTopLevelPermissionsBlock(content)
     assert.match(block, /^\s+contents:\s+read/m, `${name} must keep contents: read at top level`)
-    assert.doesNotMatch(block, /^\s+packages:\s+/m, `${name} must not declare packages at top level`)
-    assert.doesNotMatch(block, /^\s+id-token:\s+/m, `${name} must not declare id-token at top level`)
+    assert.doesNotMatch(
+      block,
+      /^\s+packages:\s+/m,
+      `${name} must not declare packages at top level`
+    )
+    assert.doesNotMatch(
+      block,
+      /^\s+id-token:\s+/m,
+      `${name} must not declare id-token at top level`
+    )
   }
 })
 
@@ -82,7 +112,11 @@ test("build image and attestation-like jobs use job-level elevated permissions",
     ["release", RELEASE_WORKFLOW],
   ]) {
     const section = getJobSection(content, "build_ci_image")
-    assert.match(section, /permissions:\s*\n\s+contents:\s+read\n\s+packages:\s+write/m, `${name} build_ci_image must declare job-level packages: write`)
+    assert.match(
+      section,
+      /permissions:\s*\n\s+contents:\s+read\n\s+packages:\s+write/m,
+      `${name} build_ci_image must declare job-level packages: write`
+    )
   }
 })
 
@@ -103,9 +137,18 @@ test("fork PR lane is GitHub-hosted and receives a readonly governance subset", 
 })
 
 test("release candidate workflow routes required gates through run-in-container tasks", () => {
-  assert.match(RELEASE_WORKFLOW, /docs-gate:[\s\S]*run-in-container\.sh --task release-docs-gate --gate release-docs-gate/)
-  assert.match(RELEASE_WORKFLOW, /type-gate:[\s\S]*run-in-container\.sh --task release-typecheck --gate release-typecheck/)
-  assert.match(RELEASE_WORKFLOW, /security-gate:[\s\S]*run-in-container\.sh --task security-scan --gate release-security-gate/)
+  assert.match(
+    RELEASE_WORKFLOW,
+    /docs-gate:[\s\S]*run-in-container\.sh --task release-docs-gate --gate release-docs-gate/
+  )
+  assert.match(
+    RELEASE_WORKFLOW,
+    /type-gate:[\s\S]*run-in-container\.sh --task release-typecheck --gate release-typecheck/
+  )
+  assert.match(
+    RELEASE_WORKFLOW,
+    /security-gate:[\s\S]*run-in-container\.sh --task security-scan --gate release-security-gate/
+  )
   assert.match(
     RELEASE_WORKFLOW,
     /release-gate:[\s\S]*run-in-container\.sh --task release-candidate-gate --gate release-candidate-gate/
@@ -142,7 +185,11 @@ test("public collaboration workflows no longer advertise self-hosted pool routes
     ["runtime-gc", RUNTIME_GC_WORKFLOW],
     ["desktop-smoke", DESKTOP_SMOKE_WORKFLOW],
   ]) {
-    assert.doesNotMatch(content, /self-hosted|shared-pool/, `${name} should not advertise self-hosted or shared-pool current truth`)
+    assert.doesNotMatch(
+      content,
+      /self-hosted|shared-pool/,
+      `${name} should not advertise self-hosted or shared-pool current truth`
+    )
   }
 })
 
@@ -153,8 +200,8 @@ test("manual sensitive workflows require workflow_dispatch plus protected enviro
     ["upstream-drift", UPSTREAM_DRIFT_WORKFLOW],
     ["desktop-smoke", DESKTOP_SMOKE_WORKFLOW],
   ]) {
-    assert.match(content, /^  workflow_dispatch:/m, `${name} must remain manually dispatchable`)
-    assert.doesNotMatch(content, /^  schedule:/m, `${name} must not auto-run on schedule`)
+    assert.match(content, /^ {2}workflow_dispatch:/m, `${name} must remain manually dispatchable`)
+    assert.doesNotMatch(content, /^ {2}schedule:/m, `${name} must not auto-run on schedule`)
   }
 
   const ciLiveAudits = getJobSection(CI_WORKFLOW, "manual_live_audits")
@@ -172,7 +219,11 @@ test("manual sensitive workflows require workflow_dispatch plus protected enviro
     [WEEKLY_WORKFLOW, "desktop-regression-macos"],
   ]) {
     const section = getJobSection(workflow, jobName)
-    assert.match(section, /environment:\s+owner-approved-sensitive/, `${jobName} must require protected environment approval`)
+    assert.match(
+      section,
+      /environment:\s+owner-approved-sensitive/,
+      `${jobName} must require protected environment approval`
+    )
   }
 })
 

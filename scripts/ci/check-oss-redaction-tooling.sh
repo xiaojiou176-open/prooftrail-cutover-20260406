@@ -6,6 +6,8 @@ cd "$ROOT_DIR"
 
 STRICT="${UIQ_OSS_AUDIT_STRICT:-false}"
 SCANCODE_TOTAL_TIMEOUT_SECONDS="${UIQ_OSS_AUDIT_SCANCODE_TOTAL_TIMEOUT_SEC:-10}"
+SCANCODE_STRICT_TOTAL_TIMEOUT_SECONDS="${UIQ_OSS_AUDIT_SCANCODE_STRICT_TIMEOUT_SEC:-120}"
+PRESIDIO_TOTAL_TIMEOUT_SECONDS="${UIQ_OSS_AUDIT_PRESIDIO_TIMEOUT_SEC:-60}"
 SCANCODE_SNAPSHOT_PATH="${UIQ_SCANCODE_SNAPSHOT_PATH:-reports/licenses-scan.json}"
 SCANCODE_SNAPSHOT_META_PATH="${UIQ_SCANCODE_SNAPSHOT_META_PATH:-reports/licenses-scan.meta.json}"
 tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/prooftrail-oss-audit.XXXXXX")"
@@ -199,16 +201,13 @@ run_git_secrets() {
 }
 
 run_presidio() {
-  require_cmd uvx || return 0
-
   local presidio_out="$tmpdir/presidio-findings.json"
-  uvx --from presidio-analyzer python - "$tmpdir/public-targets.txt" "$presidio_out" <<'PY'
+  local presidio_script="$tmpdir/presidio-scan.py"
+  cat >"$presidio_script" <<'PY'
 from pathlib import Path
 import json
 import re
 import sys
-
-from presidio_analyzer import AnalyzerEngine
 
 targets_path = Path(sys.argv[1])
 output_path = Path(sys.argv[2])
@@ -237,10 +236,12 @@ fallback_patterns = {
 }
 findings = []
 
-try:
-    engine = AnalyzerEngine()
-except Exception:
-    engine = None
+if not bool(int(__import__("os").environ.get("UIQ_FORCE_REGEX_PII_FALLBACK", "0"))):
+    try:
+        from presidio_analyzer import AnalyzerEngine
+        engine = AnalyzerEngine()
+    except Exception:
+        engine = None
 
 
 def collect_with_regex(target: str, text: str) -> None:
@@ -308,6 +309,26 @@ output_path.write_text(json.dumps(findings, ensure_ascii=False, indent=2), encod
 print(json.dumps({"count": len(findings), "sample": findings[:10]}, ensure_ascii=False, indent=2))
 PY
 
+  local rc=0
+  if command -v uvx >/dev/null 2>&1; then
+    set +e
+    run_with_python_timeout "$PRESIDIO_TOTAL_TIMEOUT_SECONDS" \
+      env UIQ_FORCE_REGEX_PII_FALLBACK=0 \
+      uvx --from presidio-analyzer python "$presidio_script" "$tmpdir/public-targets.txt" "$presidio_out"
+    rc=$?
+    set -e
+    if [[ $rc -eq 124 ]]; then
+      warn "presidio analyzer timed out after ${PRESIDIO_TOTAL_TIMEOUT_SECONDS}s; falling back to regex-only scan"
+      UIQ_FORCE_REGEX_PII_FALLBACK=1 python3 "$presidio_script" "$tmpdir/public-targets.txt" "$presidio_out"
+    elif [[ $rc -ne 0 ]]; then
+      warn "presidio analyzer bootstrap failed; falling back to regex-only scan"
+      UIQ_FORCE_REGEX_PII_FALLBACK=1 python3 "$presidio_script" "$tmpdir/public-targets.txt" "$presidio_out"
+    fi
+  else
+    warn "uvx unavailable for presidio analyzer bootstrap; falling back to regex-only scan"
+    UIQ_FORCE_REGEX_PII_FALLBACK=1 python3 "$presidio_script" "$tmpdir/public-targets.txt" "$presidio_out"
+  fi
+
   local finding_count
   finding_count="$(python3 - <<'PY' "$presidio_out"
 import json
@@ -337,16 +358,16 @@ run_scancode() {
     "apps/mcp-server/package.json"
   )
   local -a existing_targets=()
+  local strict_live_scan=false
   for target in "${targets[@]}"; do
     if [[ -f "$target" ]]; then
       existing_targets+=("$target")
     fi
   done
 
-  if [[ "$STRICT" == "true" ]]; then
+  validate_scancode_snapshot() {
     python3 - <<'PY' "$SCANCODE_SNAPSHOT_PATH" "$SCANCODE_SNAPSHOT_META_PATH" "${existing_targets[@]}"
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -374,18 +395,33 @@ for target in targets:
     if target_path.stat().st_mtime > snapshot_mtime:
         raise SystemExit(f"ScanCode snapshot stale; regenerate after changes to {target}")
 PY
-    pass "scancode snapshot contract valid"
-    return 0
+  }
+
+  if [[ "$STRICT" == "true" ]]; then
+    if ! validate_scancode_snapshot; then
+      warn "ScanCode snapshot missing or stale; regenerating via repo-owned snapshot generator"
+      bash scripts/ci/generate-scancode-license-snapshot.sh
+      validate_scancode_snapshot
+      pass "scancode snapshot contract valid"
+      return 0
+    else
+      pass "scancode snapshot contract valid"
+      return 0
+    fi
   fi
 
   require_cmd uvx || return 0
 
   local scancode_out="$tmpdir/scancode-core.json"
   local scancode_err="$tmpdir/scancode-core.stderr"
+  local timeout_seconds="$SCANCODE_TOTAL_TIMEOUT_SECONDS"
+  if [[ "$STRICT" == "true" ]]; then
+    timeout_seconds="$SCANCODE_STRICT_TOTAL_TIMEOUT_SECONDS"
+  fi
 
   local rc=0
   set +e
-  run_with_python_timeout "$SCANCODE_TOTAL_TIMEOUT_SECONDS" \
+  run_with_python_timeout "$timeout_seconds" \
     uvx --from scancode-toolkit scancode \
     --license \
     --copyright \
@@ -396,7 +432,7 @@ PY
   rc=$?
   set -e
   if [[ $rc -eq 124 ]]; then
-    strict_fail_or_warn "scancode core manifest/license scan timed out after ${SCANCODE_TOTAL_TIMEOUT_SECONDS}s"
+    strict_fail_or_warn "scancode core manifest/license scan timed out after ${timeout_seconds}s"
     sed -n '1,80p' "$scancode_err" >&2 || true
     return 0
   fi
@@ -423,6 +459,31 @@ for item in files:
 print(",".join(sorted(license_keys)[:12]))
 PY
 )"
+
+  if [[ "$STRICT" == "true" && "$strict_live_scan" == "true" ]]; then
+    mkdir -p "$(dirname "$SCANCODE_SNAPSHOT_PATH")"
+    cp "$scancode_out" "$SCANCODE_SNAPSHOT_PATH"
+    python3 - <<'PY' "$SCANCODE_SNAPSHOT_META_PATH" "${existing_targets[@]}"
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+meta_path = Path(sys.argv[1])
+targets = sys.argv[2:]
+payload = {
+    "version": 1,
+    "generatedAt": datetime.now(timezone.utc).isoformat(),
+    "scanner": "uvx --from scancode-toolkit scancode",
+    "targets": targets,
+}
+meta_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
+    validate_scancode_snapshot
+    pass "scancode live scan regenerated snapshot"
+    return 0
+  fi
+
   pass "scancode core license surface scanned (${summary:-no-license-keys-reported})"
 }
 

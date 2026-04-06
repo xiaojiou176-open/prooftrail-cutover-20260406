@@ -87,6 +87,19 @@ jobs:
           fi
           echo 'is_untrusted_fork=false' >> "$GITHUB_OUTPUT"
 
+  dependency-review:
+    needs: changes
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.is_untrusted_fork != 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - name: Dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+
   build_ci_image:
     needs: changes
     if: ${{ needs.changes.outputs.is_untrusted_fork != 'true' }}
@@ -162,6 +175,68 @@ jobs:
           fetch-depth: 0
       - name: OpenAI residue hard gate
         run: bash scripts/ci/gate-openai-residue.sh
+
+  pr-gitleaks-history:
+    needs: changes
+    if: ${{ needs.changes.outputs.is_untrusted_fork != 'true' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks history gate
+        run: bash scripts/ci/gitleaks-history-gate.sh
+      - name: Upload gitleaks history artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: uiq-pr-gitleaks-history
+          path: .runtime-cache/artifacts/ci/gitleaks-history.json
+          retention-days: 7
+          if-no-files-found: warn
+
+  pr-trivy-fs:
+    needs: changes
+    if: ${{ needs.changes.outputs.is_untrusted_fork != 'true' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: library
+          severity: HIGH,CRITICAL
+
+  public-readiness-deep:
+    needs: changes
+    if: ${{ github.event_name == 'workflow_dispatch' && needs.changes.outputs.is_untrusted_fork != 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-deps
+        with:
+          pnpm-cache: "false"
+          node-version: "20"
+          python-version: "3.11"
+          enable-playwright: "false"
+          uv-sync-command: uv sync --frozen --extra dev
+      - name: Public readiness deep check
+        run: pnpm public:readiness:deep-check
 
   upstream-mode-check:
     needs: changes

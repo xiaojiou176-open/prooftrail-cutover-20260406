@@ -46,7 +46,7 @@ repos:
       - id: uiq-commitizen-branch-pre-push
         name: UIQ branch naming gate (pre-push)
         entry: >-
-          bash -lc 'branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"; if [[ "$branch" == "HEAD" || "$branch" == "detached" ]]; then echo "[branch-gate] detached HEAD; skip"; exit 0; fi; if [[ "$branch" =~ ^(main|master|develop|dev|release/.+|hotfix/.+|feat/.+|fix/.+|chore/.+|docs/.+|refactor/.+|test/.+) ]]; then echo "[branch-gate] ok: $branch"; exit 0; fi; echo "[branch-gate] invalid branch name: $branch"; echo "[branch-gate] expected prefixes: feat/, fix/, chore/, docs/, refactor/, test/, release/, hotfix/"; exit 1'
+          bash -lc 'branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"; if [[ "$branch" == "HEAD" || "$branch" == "detached" ]]; then echo "[branch-gate] detached HEAD; skip"; exit 0; fi; if [[ "$branch" =~ ^(main|master|develop|dev|codex/.+|release/.+|hotfix/.+|feat/.+|fix/.+|chore/.+|docs/.+|refactor/.+|test/.+) ]]; then echo "[branch-gate] ok: $branch"; exit 0; fi; echo "[branch-gate] invalid branch name: $branch"; echo "[branch-gate] expected prefixes: codex/, feat/, fix/, chore/, docs/, refactor/, test/, release/, hotfix/"; exit 1'
         language: system
         pass_filenames: false
         stages: [pre-push]
@@ -241,8 +241,9 @@ repos:
     hooks:
       - id: biome-check
         entry: biome check
-        pass_filenames: false
-        args: [biome.json]
+        pass_filenames: true
+        args: [--config-path=configs/ci/biome.json]
+        files: '^(apps|packages|scripts|\.github)/.*\.(js|jsx|ts|tsx|mjs|cjs)$|^package\.json$'
 
   - repo: https://github.com/thibaudcolas/pre-commit-stylelint
     rev: v16.26.0
@@ -281,6 +282,7 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
+        args: [-x]
         files: '\.sh$'
 
   - repo: https://github.com/hadolint/hadolint

@@ -153,6 +153,32 @@ run_gate_with_container_toggle() {
   run_step "${label}-host" "$@"
 }
 
+run_lint_gate_with_container_fallback() {
+  local log_file
+  log_file="$(mktemp "${TMPDIR:-/tmp}/prooftrail-precommit-lint.XXXXXX.log")"
+  trap 'rm -f "$log_file"' RETURN
+
+  echo "[pre-commit-required] lint-all-container"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    printf '[dry-run] %q ' bash scripts/ci/run-in-container.sh --task lint --gate pre-commit-required
+    printf '\n'
+    return 0
+  fi
+
+  set +e
+  bash scripts/ci/run-in-container.sh --task lint --gate pre-commit-required >"$log_file" 2>&1
+  local rc=$?
+  set -e
+  cat "$log_file"
+  if [[ $rc -eq 0 ]]; then
+    return 0
+  fi
+
+  echo "[pre-commit-required] lint-all-container failed; falling back to host lint-all.sh for local pre-commit parity"
+  run_step "lint-all-host-fallback" bash scripts/ci/lint-all.sh
+  return 0
+}
+
 PRECOMMIT_MODE="${UIQ_PRECOMMIT_REQUIRED_MODE-}"
 if [[ -z "$PRECOMMIT_MODE" ]]; then
   PRECOMMIT_MODE="strict"
@@ -196,7 +222,7 @@ else
   run_step "atomic-commit-gate(staged)" bash scripts/ci/atomic-commit-gate.sh
 fi
 run_step "container-contract-gate" bash scripts/ci/run-in-container.sh --task contract --gate pre-commit-required
-run_gate_with_container_toggle "lint" "lint-all" bash scripts/ci/lint-all.sh
+run_lint_gate_with_container_fallback
 run_step "test-truth-gate(js-ts)" node scripts/ci/uiq-test-truth-gate.mjs --profile pre-commit-required --scope staged --strict true --write-artifacts false
 run_step "test-truth-gate(python)" python3 scripts/ci/uiq-pytest-truth-gate.py --profile pre-commit-required --strict true
 PREV_COVERAGE_ENFORCE="${UIQ_COVERAGE_ENFORCE_GLOBAL_BRANCHES-}"

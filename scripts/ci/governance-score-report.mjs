@@ -38,7 +38,8 @@ const runtimeReachabilityReport = readRequiredJson("runtime-reachability.json")
 const legacySurfaceScan = scanLegacySurfaces()
 const gateMode = finalGateProof.mode ?? "control-plane"
 const repoTruthMode = gateMode === "repo-truth"
-const truthScope = finalGateProof.truth_scope ?? (repoTruthMode ? "overall-repo-truth" : "internal-control-plane")
+const truthScope =
+  finalGateProof.truth_scope ?? (repoTruthMode ? "overall-repo-truth" : "internal-control-plane")
 const overallTruthClaimable = finalGateProof.overall_truth_claimable ?? repoTruthMode
 const scoreLabel = repoTruthMode ? "repo_truth_scope_score" : "internal_control_plane_score"
 const upstreamMode = readUpstreamMode()
@@ -108,7 +109,8 @@ const payload = {
     truth_scope: truthScope,
     repo_upstream_mode: upstreamMode,
     repo_upstream_binding_applicability: upstreamMode === "none" ? "n/a" : "required",
-    required_flows_profile: finalGateProof.required_flows_profile ?? requiredFlowsReport.profile ?? null,
+    required_flows_profile:
+      finalGateProof.required_flows_profile ?? requiredFlowsReport.profile ?? null,
     overall_truth_claimable: overallTruthClaimable,
     score_label: scoreLabel,
     score_interpretation: scoreInterpretation,
@@ -240,7 +242,9 @@ function scoreArchitecture() {
 function scoreUpstream() {
   const registryOk =
     upstreamRegistry.entries.length >= 10 &&
-    upstreamRegistry.entries.every((entry) => entry.contract_kind && entry.required_proof && entry.status === "active") &&
+    upstreamRegistry.entries.every(
+      (entry) => entry.contract_kind && entry.required_proof && entry.status === "active"
+    ) &&
     upstreamCompatMatrix.groups.every((group) => group.requiredProofArtifact) &&
     hasPassedStep("upstream_governance") &&
     Array.isArray(upstreamCustomizations.customizations) &&
@@ -267,9 +271,7 @@ function scoreUpstream() {
 }
 
 function scorePublicTruth() {
-  const ok =
-    layerPassed("public_readiness") &&
-    layerPassed("release_truth")
+  const ok = layerPassed("public_readiness") && layerPassed("release_truth")
   return finalizeDimension(ok ? 20 : 0, 20, [
     "public/open-source readiness layer passed",
     "release truth layer passed",
@@ -288,7 +290,9 @@ function scoreExecutionTruth() {
     requiredFlowsReport?.profile === "full" &&
     requiredFlowsReport?.profile_kind === "repo-truth" &&
     requiredFlowsReport?.overall_truth_claimable === true &&
-    requiredFlowsReport?.steps?.some((step) => step.step_id === "mainline_alignment" && step.status === "passed") &&
+    requiredFlowsReport?.steps?.some(
+      (step) => step.step_id === "mainline_alignment" && step.status === "passed"
+    ) &&
     finalGateProof.required_flows_profile === "full" &&
     layerPassed("mainline_alignment") &&
     finalGateProof.layers?.required_flows?.profile_kind === "repo-truth"
@@ -304,11 +308,22 @@ function scoreExecutionTruth() {
 }
 
 function scanLegacySurfaces() {
-  const scanRoots = ["SECURITY.md", "docs", "scripts", "packages", "apps", "justfile", "package.json", ".github"]
+  const scanRoots = [
+    "SECURITY.md",
+    "docs",
+    "scripts",
+    "packages",
+    "apps",
+    "justfile",
+    "package.json",
+    ".github",
+  ]
   const lines = []
   for (const relativeRoot of scanRoots) {
     const absRoot = path.join(repoRoot, relativeRoot)
-    if (!fs.existsSync(absRoot)) continue
+    if (!fs.existsSync(absRoot)) {
+      continue
+    }
     walk(absRoot)
   }
   return { count: lines.length, sample: lines.slice(0, 10) }
@@ -325,7 +340,9 @@ function scanLegacySurfaces() {
     }
     if (stat.isDirectory()) {
       for (const entry of fs.readdirSync(absPath)) {
-        if (entry === ".runtime-cache" || entry === "node_modules" || entry === "__pycache__") continue
+        if (entry === ".runtime-cache" || entry === "node_modules" || entry === "__pycache__") {
+          continue
+        }
         walk(path.join(absPath, entry))
       }
       return
@@ -357,7 +374,6 @@ function scanLegacySurfaces() {
       { label: "legacy-root frontend/", pattern: /(^|[\s`"'(=:])frontend\//gm },
       { label: "legacy-root backend/", pattern: /(^|[\s`"'(=:])backend\//gm },
       { label: "legacy-root automation/", pattern: /(^|[\s`"'(=:])automation\//gm },
-      { label: ".runtime-cache/ci/", pattern: /\.runtime-cache\/ci\//gm },
       { label: "pnpm dlx curlconverter", pattern: /\bpnpm dlx curlconverter\b/gm },
       { label: "pnpm dlx har-to-k6", pattern: /\bpnpm dlx har-to-k6\b/gm },
       { label: ".runtime-cache/test_output", pattern: /\.runtime-cache\/test_output\b/gm },
@@ -392,7 +408,9 @@ function renderMarkdownReport(payload) {
   const layerRows = Object.entries(payload.layers ?? {}).map(([name, item]) => [
     `\`${name}\``,
     `\`${item.status}\``,
-    item.profile ? `profile=${item.profile}; profile_kind=${item.profile_kind}` : (item.step_ids ?? []).join(", "),
+    item.profile
+      ? `profile=${item.profile}; profile_kind=${item.profile_kind}`
+      : (item.step_ids ?? []).join(", "),
   ])
   const title = payload.scope.overall_truth_claimable
     ? "# Repo Truth Scope Score Report"

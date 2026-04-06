@@ -76,6 +76,26 @@ jobs:
         with:
           mode: post
 
+  zizmor:
+    needs: [workflow-hygiene]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@71321a20a9ded102f6e9ce5718a2fcec2c4f70d8 # v0.5.2
+        with:
+          advanced-security: false
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post
+
   precommit-config-contract:
     needs: [workflow-hygiene]
     runs-on: ubuntu-latest
@@ -105,7 +125,6 @@ jobs:
 
   hooks-equivalence-gate:
     needs: [workflow-hygiene]
-    if: ${{ github.repository_owner != 'xiaojiou176-open' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4

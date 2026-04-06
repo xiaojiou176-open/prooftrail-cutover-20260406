@@ -70,7 +70,7 @@ GOVERNANCE_STATIC_RECOVERY_COMMAND="node scripts/ci/check-root-governance.mjs &&
 
 COMMANDS=(
   "$GOVERNANCE_STATIC_RECOVERY_COMMAND"
-  "export PROJECT_PYTHON_ENV=.runtime-cache/toolchains/python/.venv UV_PROJECT_ENVIRONMENT=.runtime-cache/toolchains/python/.venv DATABASE_URL=sqlite+pysqlite:///${COLD_CACHE_DB_PATH} && uv sync --frozen --extra dev >/dev/null 2>&1 && rm -f ${COLD_CACHE_DB_PATH} && bash scripts/dev-up.sh && bash scripts/dev-down.sh && rm -f ${COLD_CACHE_DB_PATH}"
+  "export PROJECT_PYTHON_ENV=.runtime-cache/toolchains/python/.venv UV_PROJECT_ENVIRONMENT=.runtime-cache/toolchains/python/.venv DATABASE_URL=sqlite+pysqlite:///${COLD_CACHE_DB_PATH} && uv sync --frozen --extra dev >/dev/null 2>&1 && CI=true pnpm install --frozen-lockfile >/dev/null 2>&1 && rm -f ${COLD_CACHE_DB_PATH} && bash scripts/dev-up.sh && bash scripts/dev-down.sh && rm -f ${COLD_CACHE_DB_PATH}"
   "pnpm env:check"
   "node --import tsx --test apps/mcp-server/tests/core.constants.test.ts"
 )
