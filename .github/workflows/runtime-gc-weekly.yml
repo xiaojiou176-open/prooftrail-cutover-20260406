@@ -1,0 +1,34 @@
+name: Runtime GC Weekly
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runtime-gc-weekly-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime-gc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/repo-checkout
+      - name: Validate runtime-gc scripts syntax
+        run: bash -n scripts/runtime-gc.sh scripts/tests/runtime-gc-smoke.sh
+      - name: Execute runtime-gc (all scopes)
+        run: |
+          mkdir -p .runtime-cache/metrics
+          ./scripts/runtime-gc.sh --scope all --retention-days 7 --keep-runs 50 --dir-size-threshold-mb 256 --max-delete-per-run 1200 --max-log-size-mb 64 --log-tail-lines 4000 --fail-on-error > .runtime-cache/metrics/runtime-gc-output.json
+      - name: Upload runtime-gc state artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runtime-gc-state
+          path: |
+            .runtime-cache/metrics/runtime-gc-state.json
+            .runtime-cache/metrics/runtime-gc-output.json
+          if-no-files-found: error

@@ -1,0 +1,53 @@
+name: Failure Bundle
+description: Build and upload CI failure bundle artifacts.
+inputs:
+  script-path:
+    description: Script path that builds failure bundle.
+    required: false
+    default: scripts/ci/make-failure-bundle.sh
+  bundle-path:
+    description: Directory containing generated bundle files.
+    required: false
+    default: .runtime-cache/artifacts/ci/failure-bundles/
+  if-no-files-found:
+    description: Upload artifact behavior when no files are found.
+    required: false
+    default: warn
+  retention-days:
+    description: Optional artifact retention days.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Build failure bundle
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd "$GITHUB_WORKSPACE"
+        mkdir -p .runtime-cache/artifacts/ci/failure-bundles
+        if [[ -f "${{ inputs.script-path }}" ]]; then
+          bash "${{ inputs.script-path }}" || true
+        else
+          {
+            echo "missing ${{ inputs.script-path }}"
+            echo "job=${{ github.job }}"
+            echo "run_id=${{ github.run_id }}"
+            echo "run_attempt=${{ github.run_attempt }}"
+          } > .runtime-cache/artifacts/ci/failure-bundles/MISSING_SCRIPT.txt
+        fi
+    - name: Upload failure bundle artifact
+      if: ${{ inputs.retention-days == '' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: failure-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ inputs.bundle-path }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+    - name: Upload failure bundle artifact (with retention)
+      if: ${{ inputs.retention-days != '' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: failure-${{ github.job }}-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ inputs.bundle-path }}
+        if-no-files-found: ${{ inputs.if-no-files-found }}
+        retention-days: ${{ inputs.retention-days }}

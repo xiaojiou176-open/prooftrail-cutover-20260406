@@ -1,0 +1,148 @@
+name: Pre-commit Gate
+
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+      - "configs/tooling/pre-commit-config.yaml"
+      - "scripts/ci/pre-commit-required-gates.sh"
+      - "scripts/ci/pre-push-required-gates.sh"
+      - "scripts/ci/hooks-equivalence-gate.sh"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "configs/tooling/pre-commit-config.yaml"
+      - "scripts/ci/pre-commit-required-gates.sh"
+      - "scripts/ci/pre-push-required-gates.sh"
+      - "scripts/ci/hooks-equivalence-gate.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pre-commit-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workflow-hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/repo-checkout
+        with:
+          fetch-depth: 2
+      - name: Workflow hygiene gate
+        shell: bash
+        run: bash scripts/ci/check-workflow-hygiene.sh
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post
+
+  actionlint:
+    needs: [workflow-hygiene]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/repo-checkout
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.11"
+          uv-cache: "false"
+      - name: Run pre-commit actionlint hook
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_actionlint() {
+            uvx pre-commit run --config configs/tooling/pre-commit-config.yaml actionlint --all-files --verbose
+          }
+
+          if run_actionlint; then
+            exit 0
+          fi
+
+          echo "[pre-commit-gate] first actionlint run failed; cleaning pre-commit cache and retrying once"
+          uvx pre-commit clean || true
+          run_actionlint
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post
+
+  precommit-config-contract:
+    needs: [workflow-hygiene]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/repo-checkout
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.11"
+          uv-cache: "false"
+      - name: Validate pre-commit config and key hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset SKIP || true
+          uvx pre-commit validate-config configs/tooling/pre-commit-config.yaml
+          uvx pre-commit validate-manifest
+          uvx pre-commit run --config configs/tooling/pre-commit-config.yaml check-pre-commit-outdated --all-files --verbose
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post
+
+  hooks-equivalence-gate:
+    needs: [workflow-hygiene]
+    if: ${{ github.repository_owner != 'xiaojiou176-open' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/repo-checkout
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/setup-python-uv
+        with:
+          python-version: "3.11"
+          uv-cache: "false"
+      - uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: "20"
+          enable-cache: "false"
+      - name: Run hooks equivalence gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CI=true
+          unset SKIP || true
+          bash scripts/ci/hooks-equivalence-gate.sh
+      - name: Upload hooks equivalence artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hooks-equivalence-gate-artifacts
+          path: |
+            .runtime-cache/artifacts/ci/hooks-equivalence-gate.json
+            .runtime-cache/artifacts/ci/hooks-equivalence-gate.md
+            .runtime-cache/artifacts/ci/pre-push-required-balanced.dryrun.log
+            .runtime-cache/artifacts/ci/pre-push-required-strict.dryrun.log
+            .runtime-cache/artifacts/ci/pre-commit-required-canonical.dryrun.log
+            .runtime-cache/artifacts/ci/pre-commit-required-strict.dryrun.log
+          if-no-files-found: warn
+      - uses: ./.github/actions/workspace-sanitize
+        if: ${{ always() }}
+        with:
+          mode: post

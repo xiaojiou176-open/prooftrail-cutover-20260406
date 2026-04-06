@@ -1,0 +1,21 @@
+{
+  "name": "@uiq/mcp-server",
+  "version": "0.1.0",
+  "description": "ProofTrail MCP adapter for governed AI-client access to runs, proof, and workflow operations",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx src/server.ts",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/mcp-*.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.28.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.2.3",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}
