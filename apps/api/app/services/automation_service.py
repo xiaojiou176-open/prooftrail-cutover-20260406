@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import logging
 import random
@@ -591,10 +592,15 @@ class AutomationService:
                 extra={"pid": process.pid},
             )
             return False
-        if process.poll() is not None:
+        poll = getattr(process, "poll", None)
+        if callable(poll) and poll() is not None:
             return False
         try:
             try:
+                os.killpg(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                return False
+            except OSError:
                 process.terminate()
             except ProcessLookupError:
                 return False
@@ -608,6 +614,10 @@ class AutomationService:
             return False
         except subprocess.TimeoutExpired:
             try:
+                os.killpg(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                return False
+            except OSError:
                 process.kill()
             except ProcessLookupError:
                 return False
