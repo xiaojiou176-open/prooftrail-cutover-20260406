@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         language: ["javascript-typescript", "python"]
     steps:
@@ -25,9 +26,12 @@ jobs:
         with:
           fetch-depth: 0
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c # v3
+        uses: github/codeql-action/init@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v4
         with:
           languages: ${{ matrix.language }}
           build-mode: none
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@3b1a19a80ab047f35cbb237b5bd9bdc1e14f166c # v3
+        uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v4
+        with:
+          upload-database: false
+          wait-for-processing: false
