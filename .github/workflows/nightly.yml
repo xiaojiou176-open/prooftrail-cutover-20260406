@@ -78,7 +78,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task nightly-backend-tests-shard --gate nightly-backend-tests-shard
       - name: Upload backend shard artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-backend-tests-shard-${{ matrix.shard_index }}
           path: |
@@ -259,7 +259,7 @@ jobs:
         run: node --import tsx scripts/ci/uiq-ai-review.mjs --profile nightly --strict true --severity-threshold high --max-artifacts 40 --emit-issue false --emit-pr-comment false
       - name: Upload AI review artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-ai-review
           path: |
@@ -314,7 +314,7 @@ jobs:
         run: bash scripts/ci/make-failure-bundle.sh || true
       - name: Upload failure bundle artifact
         if: ${{ failure() || cancelled() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-failure-bundles
           path: |
@@ -331,7 +331,7 @@ jobs:
     steps:
       - uses: ./.github/actions/repo-checkout
       - name: Upload Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-run
           path: |
@@ -391,7 +391,7 @@ jobs:
         run: node scripts/ci/verify-run-evidence.mjs --profile swift.regression
       - name: Upload Desktop Regression Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-desktop-regression
           path: |
@@ -501,7 +501,7 @@ jobs:
             --schema contracts/true-green-manifest.schema.json \
             --input .runtime-cache/artifacts/ci/true-green-manifest-nightly.json
       - name: Upload true-green manifest (nightly)
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-true-green-manifest
           path: .runtime-cache/artifacts/ci/true-green-manifest-nightly.json
@@ -576,7 +576,7 @@ jobs:
         run: node scripts/ci/nightly-consecutive-anomaly-gate.mjs --days 3 --input .runtime-cache/artifacts/ci/nightly-trend-aggregate.json
       - name: Upload nightly trend gate artifacts (D7)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-nightly-consecutive-anomaly-gate
           path: |
