@@ -585,16 +585,36 @@ class AutomationService:
         self, process: subprocess.Popen[str], timeout_seconds: float = 3.0
     ) -> bool:
         """Try terminate first, then force kill the direct child if it does not exit."""
-        pid = self._owned_child_pid(process)
-        if pid is None:
-            logger.warning(
-                "refused to signal process without owned positive pid",
-                extra={"pid": process.pid},
-            )
-            return False
         poll = getattr(process, "poll", None)
         if callable(poll) and poll() is not None:
             return False
+        pid = self._owned_child_pid(process)
+        if pid is None:
+            logger.warning(
+                "missing owned positive pid; falling back to direct child termination",
+                extra={"pid": getattr(process, "pid", None)},
+            )
+            try:
+                process.terminate()
+                process.wait(timeout=timeout_seconds)
+                return False
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                    try:
+                        process.wait(timeout=timeout_seconds)
+                    except subprocess.TimeoutExpired:
+                        logger.warning(
+                            "process did not exit after kill",
+                            extra={"error": "kill timeout"},
+                        )
+                    return True
+                except OSError as error:
+                    logger.warning(
+                        "failed to kill direct child process",
+                        extra={"error": str(error), "pid": getattr(process, "pid", None)},
+                    )
+                    return False
         try:
             try:
                 os.killpg(pid, signal.SIGTERM)
