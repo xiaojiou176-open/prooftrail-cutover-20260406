@@ -132,7 +132,7 @@ repos:
           print('\\n'.join(bad)) if bad else None; sys.exit(1 if bad else 0)"
         language: system
         pass_filenames: true
-        stages: [pre-commit, pre-push]
+        stages: [pre-commit]
       - id: jscpd-pre-push
         name: jscpd duplicate detection (pre-push)
         entry: bash scripts/ci/run-jscpd-gate.sh
