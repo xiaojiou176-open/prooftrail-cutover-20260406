@@ -21,7 +21,8 @@ repos:
     hooks:
       - id: uiq-required-gates-pre-commit
         name: UIQ required gates (pre-commit lightweight)
-        entry: bash scripts/ci/pre-commit-required-gates.sh
+        entry: >-
+          bash -lc 'UIQ_PRECOMMIT_REQUIRED_REPO_WIDE_GATES="${UIQ_PRECOMMIT_REQUIRED_REPO_WIDE_GATES:-false}" UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES="${UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES:-false}" UIQ_PRECOMMIT_REQUIRED_HEAVY_GATES="${UIQ_PRECOMMIT_REQUIRED_HEAVY_GATES:-false}" bash scripts/ci/pre-commit-required-gates.sh'
         language: system
         pass_filenames: false
         stages: [pre-commit]

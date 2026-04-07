@@ -74,6 +74,29 @@ These answer questions like:
 - are the GitHub storefront settings still aligned with the current public story?
 - do we have a current machine-readable closure verdict for storefront/community/security and any manual-required GitHub evidence?
 
+## Local Git Hook Contract
+
+The default local git-hook path is intentionally narrower than the full repo
+CI graph.
+
+- `pre-commit` should stay local-fast:
+  - env contract and alias checks
+  - tracked sensitive-surface and PII checks
+  - staged truth gates
+  - changed-file hook checks from `configs/tooling/pre-commit-config.yaml`
+- repo-wide lint/container parity, docs truth, governance hallway, mutation, and
+  similar wider gates should be delegated to `pre-push`, hosted CI, or explicit
+  opt-in toggles instead of being mandatory on every local commit
+- `pre-push` may keep a stronger deterministic repo-wide path, but heavy lanes
+  such as mutation, nonstub browser replay, deep security scans, or live audits
+  must stay opt-in or hosted
+
+This split keeps the default local loop honest:
+
+- commit-time hooks stay fast enough for normal iteration
+- repo-wide parity still exists before merge
+- heavy proof remains available without turning every commit into a mini CI run
+
 ## Workspace Hygiene Contract
 
 Artifacts/reports/logs may live under `.runtime-cache/`, but workspace hygiene

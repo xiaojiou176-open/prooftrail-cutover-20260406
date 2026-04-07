@@ -93,11 +93,29 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
         with:
           fetch-depth: 0
+      - name: Check dependency graph support
+        id: dep_graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          if curl -fsS \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/dependency-graph/sbom" \
+            >/dev/null; then
+            echo "supported=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::dependency graph unsupported on this repository; skipping dependency review"
+            echo "supported=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Dependency review
+        if: ${{ steps.dep_graph.outputs.supported == 'true' }}
         uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
 
   build_ci_image:
@@ -108,12 +126,20 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_ref: ${{ steps.build.outputs.image_ref }}
+      image_ref: ${{ steps.build_ref_only.outputs.image_ref || steps.build.outputs.image_ref }}
     steps:
       - uses: actions/checkout@64ffef1ea610c4052efefeb955034987fb104bc4 # v4
         with:
           fetch-depth: 0
+      - name: Resolve repo-owned CI image ref without push for canonical owner
+        if: ${{ github.repository_owner == 'xiaojiou176-open' }}
+        id: build_ref_only
+        run: |
+          set -euo pipefail
+          image_ref="$(bash scripts/ci/build-ci-image.sh --print-ref)"
+          echo "image_ref=${image_ref}" >> "$GITHUB_OUTPUT"
       - name: Login to GHCR
+        if: ${{ github.repository_owner != 'xiaojiou176-open' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUNNER_TEMP: ${{ runner.temp }}
@@ -127,6 +153,7 @@ jobs:
           printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
       - name: Build repo-owned CI image
         id: build
+        if: ${{ github.repository_owner != 'xiaojiou176-open' }}
         env:
           RUNNER_TEMP: ${{ runner.temp }}
         run: |
@@ -354,7 +381,7 @@ jobs:
           if-no-files-found: warn
   pr-run-gate:
     needs: [changes, build_ci_image]
-    if: ${{ needs.changes.outputs.is_untrusted_fork != 'true' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') }}
+    if: ${{ needs.changes.outputs.is_untrusted_fork != 'true' && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.shared == 'true') }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -555,7 +582,7 @@ jobs:
 
           pr_static_required="${{ (github.event_name == 'workflow_dispatch' || needs.changes.outputs.docs == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.scripts == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') && '1' || '0' }}"
           pr_mcp_required="${{ (github.event_name == 'workflow_dispatch' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') && '1' || '0' }}"
-          pr_run_required="${{ (github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.shared == 'true' || needs.changes.outputs.ci == 'true') && '1' || '0' }}"
+          pr_run_required="${{ (github.event_name == 'workflow_dispatch' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true' || needs.changes.outputs.automation == 'true' || needs.changes.outputs.apps == 'true' || needs.changes.outputs.packages == 'true' || needs.changes.outputs.shared == 'true') && '1' || '0' }}"
           pr_frontend_e2e_required="${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}"
           pr_quality_required="${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}"
 

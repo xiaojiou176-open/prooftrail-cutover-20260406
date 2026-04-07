@@ -337,11 +337,11 @@ run_task_in_container() {
     chmod u+rwx "$artifact_dir" 2>/dev/null || true
   fi
   bootstrap_cmd="$(cat <<EOF
-export PATH="\$HOME/.local/bin:\$PATH"; corepack enable >/dev/null 2>&1 || true; corepack prepare pnpm@10.22.0 --activate >/dev/null 2>&1 || true; mkdir -p "\$HOME/.local/bin" "\$HOME/.local/share/uv"; cat > "\$HOME/.local/bin/pnpm" <<'EOF_PNPM'
+export PATH="\$HOME/.local/bin:\$PATH"; mkdir -p "\$HOME/.local/bin" "\$HOME/.local/share/uv"; npm install --prefix "\$HOME/.local" -g pnpm@10.22.0 >/dev/null 2>&1 || { corepack enable >/dev/null 2>&1 || true; corepack prepare pnpm@10.22.0 --activate >/dev/null 2>&1 || true; cat > "\$HOME/.local/bin/pnpm" <<'EOF_PNPM'
 #!/usr/bin/env bash
 exec corepack pnpm "\$@"
 EOF_PNPM
-chmod +x "\$HOME/.local/bin/pnpm"; if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1 || true; fi; mkdir -p "${WORKDIR}/.runtime-cache/artifacts/ci"
+chmod +x "\$HOME/.local/bin/pnpm"; }; if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1 || true; fi; mkdir -p "${WORKDIR}/.runtime-cache/artifacts/ci"
 EOF
 )"
   local -a env_args=(

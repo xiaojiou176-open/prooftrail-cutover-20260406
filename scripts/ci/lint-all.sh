@@ -82,14 +82,31 @@ run_backend_lint() {
 install_workspace_deps_serialized() {
   local lock_root=".runtime-cache/locks"
   local lock_dir="${lock_root}/lint-all-workspace-install.lock.d"
+  local lock_pid_file="${lock_dir}/pid"
   mkdir -p "$lock_root"
 
   while ! mkdir "$lock_dir" 2>/dev/null; do
+    if [[ -f "$lock_pid_file" ]]; then
+      local holder_pid=""
+      holder_pid="$(cat "$lock_pid_file" 2>/dev/null || true)"
+      if [[ -n "$holder_pid" ]] && ! kill -0 "$holder_pid" >/dev/null 2>&1; then
+        rm -f "$lock_pid_file" 2>/dev/null || true
+        rmdir "$lock_dir" 2>/dev/null || true
+        continue
+      fi
+    elif [[ -d "$lock_dir" ]]; then
+      rmdir "$lock_dir" 2>/dev/null || true
+      if [[ ! -d "$lock_dir" ]]; then
+        continue
+      fi
+    fi
     sleep 1
   done
+  printf '%s\n' "$$" >"$lock_pid_file"
 
   echo "[lint-all] installing workspace deps under lock..."
   CI=true pnpm install --frozen-lockfile || CI=true pnpm install --no-frozen-lockfile
+  rm -f "$lock_pid_file" 2>/dev/null || true
   rmdir "$lock_dir" 2>/dev/null || true
 }
 

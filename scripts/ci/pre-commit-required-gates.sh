@@ -155,7 +155,7 @@ run_gate_with_container_toggle() {
 
 run_lint_gate_with_container_fallback() {
   local log_file
-  log_file="$(mktemp "${TMPDIR:-/tmp}/prooftrail-precommit-lint.XXXXXX.log")"
+  log_file="$(mktemp "${TMPDIR:-/tmp}/prooftrail-precommit-lint.XXXXXX")"
   trap 'rm -f "$log_file"' RETURN
 
   echo "[pre-commit-required] lint-all-container"
@@ -188,14 +188,16 @@ if [[ "$PRECOMMIT_MODE" != "strict" ]]; then
   exit 2
 fi
 
-DEFAULT_STRICT_FLAG="true"
+DEFAULT_REPO_WIDE_FLAG="false"
+DEFAULT_ENV_DOCS_FLAG="false"
 DEFAULT_HEAVY_FLAG="false"
 
-RUN_ENV_DOCS_GATES="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES "$DEFAULT_STRICT_FLAG")"
+RUN_REPO_WIDE_GATES="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_REPO_WIDE_GATES "$DEFAULT_REPO_WIDE_FLAG")"
+RUN_ENV_DOCS_GATES="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES "$DEFAULT_ENV_DOCS_FLAG")"
 RUN_HEAVY_GATES="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_HEAVY_GATES "$DEFAULT_HEAVY_FLAG")"
-COVERAGE_BRANCH_ENFORCE="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_ENFORCE_GLOBAL_BRANCHES "$DEFAULT_STRICT_FLAG")"
+COVERAGE_BRANCH_ENFORCE="$(resolve_bool_flag UIQ_PRECOMMIT_REQUIRED_ENFORCE_GLOBAL_BRANCHES "true")"
 
-echo "[pre-commit-required] mode=${PRECOMMIT_MODE} env_docs=${RUN_ENV_DOCS_GATES} heavy=${RUN_HEAVY_GATES} coverage_branches=${COVERAGE_BRANCH_ENFORCE}"
+echo "[pre-commit-required] mode=${PRECOMMIT_MODE} repo_wide=${RUN_REPO_WIDE_GATES} env_docs=${RUN_ENV_DOCS_GATES} heavy=${RUN_HEAVY_GATES} coverage_branches=${COVERAGE_BRANCH_ENFORCE}"
 
 # Stabilize branch coverage signal across local environments (avoid xdist variability).
 export UIQ_COVERAGE_PYTEST_N="${UIQ_COVERAGE_PYTEST_N:-1}"
@@ -221,8 +223,12 @@ elif is_all_files_audit_context; then
 else
   run_step "atomic-commit-gate(staged)" bash scripts/ci/atomic-commit-gate.sh
 fi
-run_step "container-contract-gate" bash scripts/ci/run-in-container.sh --task contract --gate pre-commit-required
-run_lint_gate_with_container_fallback
+if [[ "$RUN_REPO_WIDE_GATES" == "true" || "$RUN_HEAVY_GATES" == "true" ]]; then
+  run_step "container-contract-gate" bash scripts/ci/run-in-container.sh --task contract --gate pre-commit-required
+  run_lint_gate_with_container_fallback
+else
+  echo "[pre-commit-required] repo-wide lint/container delegated to pre-push/CI (set UIQ_PRECOMMIT_REQUIRED_REPO_WIDE_GATES=true to enable)"
+fi
 run_step "test-truth-gate(js-ts)" node scripts/ci/uiq-test-truth-gate.mjs --profile pre-commit-required --scope staged --strict true --write-artifacts false
 run_step "test-truth-gate(python)" python3 scripts/ci/uiq-pytest-truth-gate.py --profile pre-commit-required --strict true
 PREV_COVERAGE_ENFORCE="${UIQ_COVERAGE_ENFORCE_GLOBAL_BRANCHES-}"
@@ -251,6 +257,8 @@ else
   if [[ "$RUN_ENV_DOCS_GATES" == "true" ]]; then
     run_step "docs-gate" bash scripts/docs-gate.sh
     run_step "governance-control-plane-check" pnpm governance:control-plane:check
+  else
+    echo "[pre-commit-required] docs/governance gates delegated to pre-push/CI (set UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES=true to enable)"
   fi
   echo "[pre-commit-required] heavy gates delegated to pre-push/CI (set UIQ_PRECOMMIT_REQUIRED_HEAVY_GATES=true to enable)"
 fi
