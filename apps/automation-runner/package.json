@@ -28,7 +28,7 @@
     "@esbuild/darwin-arm64": "0.27.4",
     "@eslint/js": "9.39.4",
     "@google/genai": "1.42.0",
-    "@playwright/test": "1.58.2",
+    "@playwright/test": "1.59.1",
     "@types/node": "25.2.3",
     "ajv": "6.14.0",
     "curlconverter": "4.12.0",
