@@ -65,6 +65,13 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+      - id: uiq-env-contract-example
+        name: UIQ env example contract check
+        entry: pnpm env:contract:check
+        language: system
+        pass_filenames: false
+        files: '(^|/)\\.env\\.example$|(^|/)configs/env/contract\\.yaml$'
+        stages: [pre-commit]
       - id: check-iac-exists
         name: Check IaC baseline files exist
         entry: bash scripts/ci/check-iac-exists.sh
@@ -182,14 +189,6 @@ repos:
           - '(^|/)\.codex/|(^|/)docs/|(^|/)artifacts/|(^|/)(tests?|__tests__|fixtures?)/|(^|/)(pnpm-lock\.yaml|package-lock\.json|yarn\.lock|uv\.lock)$|(^|/)README\.md$|(^|/)\.env\.example$|(^|/)docker-compose\.ya?ml$|(^|/)configs/env/contract\.yaml$|(^|/)apps/api/app/core/settings\.py$|(^|/)scripts/|(^|/)apps/automation-runner/'
         files: '^(apps/api/app|config)/.*\.(py|ya?ml|json|toml)$|(^|/)\.env(\..+)?$'
         stages: [pre-commit, pre-push]
-
-  - repo: https://github.com/dotenv-linter/dotenv-linter
-    rev: v4.0.0
-    hooks:
-      - id: dotenv-linter
-        args: [--skip, UnorderedKey]
-        files: '(^|/)\.env(\..+)?$'
-        exclude: '(^|/)\.env\.example$'
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.13.9

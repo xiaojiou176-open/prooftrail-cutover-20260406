@@ -29,6 +29,8 @@ jobs:
       SWIFT_BUNDLE_ID_INPUT: ${{ github.event.inputs.swift_bundle_id }}
       MATRIX_TARGET: ${{ matrix.target }}
       MATRIX_PROFILE: ${{ matrix.profile }}
+      UIQ_DESKTOP_AUTOMATION_MODE: operator-manual
+      UIQ_DESKTOP_AUTOMATION_REASON: github-workflow-desktop-smoke
     steps:
       - uses: ./.github/actions/repo-checkout
       - uses: ./.github/actions/setup-deps

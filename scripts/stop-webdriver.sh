@@ -16,7 +16,8 @@ if [[ -n "${PID}" ]] && kill -0 "$PID" >/dev/null 2>&1; then
   kill "$PID" >/dev/null 2>&1 || true
   sleep 1
   if kill -0 "$PID" >/dev/null 2>&1; then
-    kill -9 "$PID" >/dev/null 2>&1 || true
+    echo "webdriver pid=$PID did not exit after SIGTERM; manual cleanup required"
+    exit 1
   fi
 fi
 

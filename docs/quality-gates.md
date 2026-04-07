@@ -19,7 +19,8 @@ Think of these as four different report cards instead of one giant checkmark:
 Each layer answers a different question:
 
 - control-plane green: are the internal governance rules wired correctly?
-- repo truth green: does the repository-wide truth surface hold together end to end?
+- repo truth green: does the repository-wide truth surface hold together
+  end to end?
 - public truth green: is the public/open-source-facing surface safe and aligned?
 - release truth green: are release-facing proof claims still honest?
 
@@ -37,7 +38,8 @@ These answer questions like:
 - does the README still explain the right public road?
 - do the supporting docs pages actually exist?
 - did a legacy name or helper path leak back into the public surface?
-- do the tracked storefront assets match the same policy used by public readiness checks?
+- do the tracked storefront assets match the same policy used by public
+  readiness checks?
 
 ## Feature-specific gates
 
@@ -58,6 +60,7 @@ These answer questions like:
 - `node scripts/ci/check-source-tree-runtime-residue.mjs`
 - `pnpm -s public:collaboration:check`
 - `pnpm -s docs:links:check`
+- `pnpm check:host-safety`
 - `bash scripts/github/check-storefront-settings.sh`
 - `just github-closure-report`
 
@@ -65,14 +68,19 @@ These answer questions like:
 
 - are the public collaboration files present and readable?
 - are the docs links still valid?
-- did an absolute local path, raw secret token, or cookie-like value leak into the tracked repo tree?
+- did an absolute local path, raw secret token, or cookie-like value leak
+  into the tracked repo tree?
 - does tracked Git history still carry high-signal secret or local-path residue?
 - did a real-looking non-placeholder email address leak into tracked content?
 - did runtime/tool residue land inside repo-owned source roots?
 - did secrets or unsafe dependencies leak into the tracked tree?
-- are the tracked storefront PNG assets explicitly allowed as public-facing proof surfaces instead of being treated as accidental heavy artifacts?
+- do desktop smoke/e2e/business/soak lanes stay fail-closed behind
+  operator-manual env gates and protected environments?
+- are the tracked storefront PNG assets explicitly allowed as public-facing
+  proof surfaces instead of being treated as accidental heavy artifacts?
 - are the GitHub storefront settings still aligned with the current public story?
-- do we have a current machine-readable closure verdict for storefront/community/security and any manual-required GitHub evidence?
+- do we have a current machine-readable closure verdict for
+  storefront/community/security and any manual-required GitHub evidence?
 
 ## Local Git Hook Contract
 
