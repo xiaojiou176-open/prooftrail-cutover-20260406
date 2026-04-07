@@ -188,7 +188,7 @@ run_gate_with_container_toggle() {
   shift 2
   if has_container_task "$task"; then
     if ! docker_daemon_available; then
-      echo "[$SCRIPT_NAME] docker daemon unavailable; refusing host fallback for task=${task}" >&2
+      run_step "${step_name}_container" bash -lc "echo \"[$SCRIPT_NAME] docker daemon unavailable; refusing host fallback for task=${task}\" >&2; exit 1"
       return 1
     fi
     local -a container_cmd=(bash scripts/ci/run-in-container.sh --task "$task" --gate hooks-equivalence)
@@ -228,13 +228,22 @@ verify_prepush_policy_contract() {
 verify_precommit_policy_contract() {
   bash scripts/ci/pre-commit-required-gates.sh --dry-run 2>&1 | tee "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
   grep -q "mode=strict" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
+  grep -q "repo_wide=false" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
+  grep -q "env_docs=false" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
   grep -q "heavy=false" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
+  grep -q "repo-wide lint/container delegated to pre-push/CI" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
+  grep -q "docs/governance gates delegated to pre-push/CI" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
   grep -q "heavy gates delegated to pre-push/CI" "$PRECOMMIT_CANONICAL_DRYRUN_LOG"
 
   UIQ_PRECOMMIT_REQUIRED_MODE=strict \
+  UIQ_PRECOMMIT_REQUIRED_REPO_WIDE_GATES=true \
+  UIQ_PRECOMMIT_REQUIRED_ENV_DOCS_GATES=true \
   UIQ_PRECOMMIT_REQUIRED_HEAVY_GATES=true \
     bash scripts/ci/pre-commit-required-gates.sh --dry-run 2>&1 | tee "$PRECOMMIT_STRICT_DRYRUN_LOG"
   grep -q "mode=strict" "$PRECOMMIT_STRICT_DRYRUN_LOG"
+  grep -q "container-contract-gate" "$PRECOMMIT_STRICT_DRYRUN_LOG"
+  grep -q "lint-all-container" "$PRECOMMIT_STRICT_DRYRUN_LOG"
+  grep -q "docs-gate" "$PRECOMMIT_STRICT_DRYRUN_LOG"
   grep -q "mutation-ts-strict" "$PRECOMMIT_STRICT_DRYRUN_LOG"
   grep -q "security-scan" "$PRECOMMIT_STRICT_DRYRUN_LOG"
 }
