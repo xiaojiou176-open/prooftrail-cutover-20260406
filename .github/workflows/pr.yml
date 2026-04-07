@@ -217,7 +217,7 @@ jobs:
         run: bash scripts/ci/gitleaks-history-gate.sh
       - name: Upload gitleaks history artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-gitleaks-history
           path: .runtime-cache/artifacts/ci/gitleaks-history.json
@@ -334,7 +334,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task pr-static-gate --gate pr-static-gate
       - name: Upload test truthiness gate artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-test-truth-gate
           path: |
@@ -344,7 +344,7 @@ jobs:
           if-no-files-found: warn
       - name: Upload Python test truthiness gate artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-pytest-truth-gate
           path: |
@@ -371,7 +371,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task pr-mcp-gate --gate pr-mcp-gate
       - name: Upload MCP stress gate artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-mcp-stress-gate
           path: |
@@ -398,7 +398,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task pr-run-profile --gate pr-run-profile
       - name: Upload AI review artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-ai-review
           path: |
@@ -407,7 +407,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
       - name: Upload Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-run
           path: |
@@ -448,7 +448,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task frontend-nonstub --gate pr-frontend-nonstub
       - name: Upload counterfactual audit report (always, shard1)
         if: ${{ always() && matrix.shard_index == 1 }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-counterfactual-report
           path: |
@@ -487,7 +487,7 @@ jobs:
         run: bash scripts/ci/run-in-container.sh --task pr-quality-gate --gate pr-quality-gate
       - name: Upload mutation reports (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-mutation-reports
           path: |
@@ -629,7 +629,7 @@ jobs:
             --schema contracts/true-green-manifest.schema.json \
             --input .runtime-cache/artifacts/ci/true-green-manifest-pr.json
       - name: Upload PR true-green manifest
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: uiq-pr-true-green-manifest
           path: .runtime-cache/artifacts/ci/true-green-manifest-pr.json
