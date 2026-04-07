@@ -350,6 +350,8 @@ jobs:
     env:
       UIQ_TAURI_APP_PATH: ${{ vars.UIQ_TAURI_APP_PATH || secrets.UIQ_TAURI_APP_PATH || '' }}
       UIQ_SWIFT_BUNDLE_ID: ${{ vars.UIQ_SWIFT_BUNDLE_ID || secrets.UIQ_SWIFT_BUNDLE_ID || '' }}
+      UIQ_DESKTOP_AUTOMATION_MODE: operator-manual
+      UIQ_DESKTOP_AUTOMATION_REASON: github-workflow-nightly-desktop-regression
     steps:
       - uses: ./.github/actions/repo-checkout
       - uses: ./.github/actions/setup-deps

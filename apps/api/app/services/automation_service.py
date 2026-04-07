@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import logging
 import random
@@ -584,17 +585,42 @@ class AutomationService:
         self, process: subprocess.Popen[str], timeout_seconds: float = 3.0
     ) -> bool:
         """Try terminate first, then force kill the direct child if it does not exit."""
+        poll = getattr(process, "poll", None)
+        if callable(poll) and poll() is not None:
+            return False
         pid = self._owned_child_pid(process)
         if pid is None:
             logger.warning(
-                "refused to signal process without owned positive pid",
-                extra={"pid": process.pid},
+                "missing owned positive pid; falling back to direct child termination",
+                extra={"pid": getattr(process, "pid", None)},
             )
-            return False
-        if process.poll() is not None:
-            return False
+            try:
+                process.terminate()
+                process.wait(timeout=timeout_seconds)
+                return False
+            except subprocess.TimeoutExpired:
+                try:
+                    process.kill()
+                    try:
+                        process.wait(timeout=timeout_seconds)
+                    except subprocess.TimeoutExpired:
+                        logger.warning(
+                            "process did not exit after kill",
+                            extra={"error": "kill timeout"},
+                        )
+                    return True
+                except OSError as error:
+                    logger.warning(
+                        "failed to kill direct child process",
+                        extra={"error": str(error), "pid": getattr(process, "pid", None)},
+                    )
+                    return False
         try:
             try:
+                os.killpg(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                return False
+            except OSError:
                 process.terminate()
             except ProcessLookupError:
                 return False
@@ -608,6 +634,10 @@ class AutomationService:
             return False
         except subprocess.TimeoutExpired:
             try:
+                os.killpg(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                return False
+            except OSError:
                 process.kill()
             except ProcessLookupError:
                 return False

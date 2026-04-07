@@ -5,6 +5,8 @@ default_install_hook_types:
   - pre-commit
   - pre-push
   - commit-msg
+default_stages:
+  - pre-commit
 
 exclude: |
   (?x)^(
@@ -64,6 +66,13 @@ repos:
           bash -lc 'set -euo pipefail; bad="$(git ls-files | grep -E "^\\.env(\\..+)?$" | grep -Ev "^\\.env\\.example$" || true)"; if [[ -n "${bad}" ]]; then echo "tracked real .env files are forbidden:" >&2; echo "${bad}" >&2; exit 1; fi'
         language: system
         pass_filenames: false
+        stages: [pre-commit]
+      - id: uiq-env-contract-example
+        name: UIQ env example contract check
+        entry: pnpm env:contract:check
+        language: system
+        pass_filenames: false
+        files: '(^|/)\\.env\\.example$|(^|/)configs/env/contract\\.yaml$'
         stages: [pre-commit]
       - id: check-iac-exists
         name: Check IaC baseline files exist
@@ -125,7 +134,7 @@ repos:
           print('\\n'.join(bad)) if bad else None; sys.exit(1 if bad else 0)"
         language: system
         pass_filenames: true
-        stages: [pre-commit, pre-push]
+        stages: [pre-commit]
       - id: jscpd-pre-push
         name: jscpd duplicate detection (pre-push)
         entry: bash scripts/ci/run-jscpd-gate.sh
@@ -182,14 +191,6 @@ repos:
           - '(^|/)\.codex/|(^|/)docs/|(^|/)artifacts/|(^|/)(tests?|__tests__|fixtures?)/|(^|/)(pnpm-lock\.yaml|package-lock\.json|yarn\.lock|uv\.lock)$|(^|/)README\.md$|(^|/)\.env\.example$|(^|/)docker-compose\.ya?ml$|(^|/)configs/env/contract\.yaml$|(^|/)apps/api/app/core/settings\.py$|(^|/)scripts/|(^|/)apps/automation-runner/'
         files: '^(apps/api/app|config)/.*\.(py|ya?ml|json|toml)$|(^|/)\.env(\..+)?$'
         stages: [pre-commit, pre-push]
-
-  - repo: https://github.com/dotenv-linter/dotenv-linter
-    rev: v4.0.0
-    hooks:
-      - id: dotenv-linter
-        args: [--skip, UnorderedKey]
-        files: '(^|/)\.env(\..+)?$'
-        exclude: '(^|/)\.env\.example$'
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.13.9

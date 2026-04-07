@@ -54,7 +54,8 @@ stop_by_pid_file() {
       sleep 0.2
     done
     if kill -0 "$pid" >/dev/null 2>&1; then
-      kill -9 "$pid" >/dev/null 2>&1 || true
+      echo "$name pid=$pid did not exit after SIGTERM; manual cleanup required"
+      return 1
     fi
     echo "$name stopped (pid=$pid)"
   else

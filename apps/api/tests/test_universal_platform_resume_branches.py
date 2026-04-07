@@ -31,6 +31,7 @@ class _FakeService:
         self._lock = RLock()
         self.audits: list[tuple[str, str | None, dict[str, object]]] = []
         self.last_env: dict[str, str] | None = None
+        self.materialized_flow_ids: list[str] = []
 
     def get_run(self, run_id: str, requester: str | None = None) -> RunRecord:
         if self._run is None or self._run.run_id != run_id:
@@ -55,7 +56,11 @@ class _FakeService:
 
     def get_flow(self, flow_id: str, requester: str | None = None) -> SimpleNamespace:
         _ = requester
-        return SimpleNamespace(flow_id=flow_id, start_url="https://example.com/register")
+        return SimpleNamespace(
+            flow_id=flow_id,
+            session_id="session_1",
+            start_url="https://example.com/register",
+        )
 
     def _get_validated_params_snapshot(self, run_id: str) -> dict[str, str]:
         _ = run_id
@@ -63,6 +68,9 @@ class _FakeService:
 
     def _validate_params(self, template: object, params: object, otp_policy: object) -> None:
         _ = (template, params, otp_policy)
+
+    def _materialize_replay_bridge(self, flow: SimpleNamespace) -> None:
+        self.materialized_flow_ids.append(flow.flow_id)
 
     def _build_env(self, start_url: str, params: dict[str, str], otp_value: str) -> dict[str, str]:
         env = {"START_URL": start_url, "EMAIL": params["email"], "OTP": otp_value}

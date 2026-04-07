@@ -220,16 +220,21 @@ def test_automation_retry_terminate_and_sync_edge_branches(
     class TimeoutProcess:
         pid = None
 
+        def __init__(self) -> None:
+            self.terminated = False
+
         def terminate(self) -> None:
-            return None
+            self.terminated = True
 
         def kill(self) -> None:
-            return None
+            self.terminated = True
 
         def wait(self, timeout: float | None = None) -> int:
             raise subprocess.TimeoutExpired("cmd", timeout)
 
-    assert automation_service._terminate_process(TimeoutProcess(), timeout_seconds=0.01) is True
+    process = TimeoutProcess()
+    assert automation_service._terminate_process(process, timeout_seconds=0.01) is True
+    assert process.terminated is True
     assert warnings
 
     now = datetime.now(timezone.utc)

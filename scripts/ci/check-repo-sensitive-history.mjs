@@ -25,7 +25,9 @@ for (const { id, probe } of trackedSensitiveHistoryProbes) {
       stdio: ["ignore", "pipe", "pipe"],
     }).trim()
 
-    if (!output) continue
+    if (!output) {
+      continue
+    }
 
     const firstHit = output.split("\n", 1)[0]
     failures.push(`${id} matched in history (${firstHit})`)
@@ -39,9 +41,10 @@ for (const { id, probe } of trackedSensitiveHistoryProbes) {
 
 if (failures.length > 0) {
   console.error("[repo-sensitive-history] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 
 console.log("[repo-sensitive-history] ok")
-

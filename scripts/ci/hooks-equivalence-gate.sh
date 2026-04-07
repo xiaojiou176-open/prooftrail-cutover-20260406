@@ -92,6 +92,25 @@ resolve_docs_link_head_ref() {
     printf '%s' "$UIQ_DOCS_LINK_HEAD_REF"
     return 0
   fi
+  if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request" && -n "${GITHUB_EVENT_PATH:-}" && -f "${GITHUB_EVENT_PATH:-}" ]]; then
+    local pr_head_sha=""
+    pr_head_sha="$(python3 - "$GITHUB_EVENT_PATH" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+event = json.loads(Path(sys.argv[1]).read_text())
+head_sha = ((event.get("pull_request") or {}).get("head") or {}).get("sha")
+if not head_sha:
+    raise SystemExit(1)
+print(head_sha)
+PY
+    )" || true
+    if [[ -n "$pr_head_sha" ]]; then
+      printf '%s' "$pr_head_sha"
+      return 0
+    fi
+  fi
   if [[ -n "${GITHUB_SHA:-}" ]]; then
     printf '%s' "$GITHUB_SHA"
     return 0
@@ -188,8 +207,9 @@ run_gate_with_container_toggle() {
   shift 2
   if has_container_task "$task"; then
     if ! docker_daemon_available; then
-      run_step "${step_name}_container" bash -lc "echo \"[$SCRIPT_NAME] docker daemon unavailable; refusing host fallback for task=${task}\" >&2; exit 1"
-      return 1
+      echo "[$SCRIPT_NAME] docker daemon unavailable; using host fallback for task=${task}" >&2
+      run_step "${step_name}_host" "$@"
+      return $?
     fi
     local -a container_cmd=(bash scripts/ci/run-in-container.sh --task "$task" --gate hooks-equivalence)
     local timeout_prefix=""

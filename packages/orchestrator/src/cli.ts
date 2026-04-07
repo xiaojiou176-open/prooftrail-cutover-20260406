@@ -103,6 +103,54 @@ export const SUPPORTED_COMMANDS = [
   "report",
 ] as const
 
+const OPERATOR_MANUAL_MODE = "operator-manual"
+
+function readDesktopAutomationMode(): string | undefined {
+  return process.env.UIQ_DESKTOP_AUTOMATION_MODE // uiq-env-allow desktop operator-manual gate
+}
+
+function readDesktopAutomationReason(): string {
+  return process.env.UIQ_DESKTOP_AUTOMATION_REASON?.trim() ?? "" // uiq-env-allow desktop operator-manual gate
+}
+
+function requiresDesktopOperatorManualGate(args: Args, profileSteps?: string[]): boolean {
+  if (
+    args.command === "desktop-smoke" ||
+    args.command === "desktop-e2e" ||
+    args.command === "desktop-business" ||
+    args.command === "desktop-soak"
+  ) {
+    return true
+  }
+
+  if (args.command !== "run" || !profileSteps) {
+    return false
+  }
+
+  return profileSteps.some((step) =>
+    ["desktop_smoke", "desktop_e2e", "desktop_business_regression", "desktop_soak"].includes(step)
+  )
+}
+
+export function assertDesktopOperatorManualGate(args: Args, profileSteps?: string[]): void {
+  if (!requiresDesktopOperatorManualGate(args, profileSteps)) {
+    return
+  }
+
+  if (readDesktopAutomationMode() !== OPERATOR_MANUAL_MODE) {
+    throw new Error(
+      "Desktop smoke / e2e / business / soak are operator-manual lanes. Set UIQ_DESKTOP_AUTOMATION_MODE=operator-manual."
+    )
+  }
+
+  const reason = readDesktopAutomationReason()
+  if (!reason) {
+    throw new Error(
+      "Desktop smoke / e2e / business / soak require UIQ_DESKTOP_AUTOMATION_REASON=<auditable reason>."
+    )
+  }
+}
+
 function printHelp(): void {
   console.log("Usage: pnpm uiq <command> [options]")
   console.log(`Commands: ${SUPPORTED_COMMANDS.join(", ")}`)
@@ -124,11 +172,15 @@ function printHelp(): void {
   console.log("  pnpm uiq engines:check --profile nightly")
   console.log("  pnpm uiq run --profile nightly --explore-engine crawlee --visual-engine lostpixel")
   console.log("  pnpm uiq run --profile nightly --ai-review true --ai-review-max-artifacts 40")
-  console.log('  pnpm uiq computer-use --task "Open the browser and sign in" --max-steps 80 --speed-mode true')
+  console.log(
+    '  pnpm uiq computer-use --task "Open the browser and sign in" --max-steps 80 --speed-mode true'
+  )
 }
 
 function assertIntInRange(name: string, value: number | undefined, min: number, max: number): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (!Number.isInteger(value) || value < min || value > max) {
     throw new Error(`Invalid ${name}: expected integer in [${min}, ${max}], got ${value}`)
   }
@@ -140,7 +192,9 @@ function assertNumberInRange(
   min: number,
   max: number
 ): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (!Number.isFinite(value) || value < min || value > max) {
     throw new Error(`Invalid ${name}: expected number in [${min}, ${max}], got ${value}`)
   }
@@ -275,40 +329,90 @@ export function parseArgs(argv: string[]): Args {
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i]
     const next = rest[i + 1]
-    if (token === "--profile" && next) args.profile = next
-    if (token === "--target" && next) args.target = next
-    if (token === "--run-id" && next) args.runId = next
-    if (token === "--task" && next) args.task = next
-    if (token === "--max-steps" && next) args.maxSteps = Number(next)
-    if (token === "--speed-mode" && next && (next === "true" || next === "false"))
+    if (token === "--profile" && next) {
+      args.profile = next
+    }
+    if (token === "--target" && next) {
+      args.target = next
+    }
+    if (token === "--run-id" && next) {
+      args.runId = next
+    }
+    if (token === "--task" && next) {
+      args.task = next
+    }
+    if (token === "--max-steps" && next) {
+      args.maxSteps = Number(next)
+    }
+    if (token === "--speed-mode" && next && (next === "true" || next === "false")) {
       args.speedMode = next === "true"
-    if (token === "--base-url" && next) args.baseUrl = next
-    if (token === "--app" && next) args.app = next
-    if (token === "--bundle-id" && next) args.bundleId = next
-    if (token === "--diagnostics-max-items" && next) args.diagnosticsMaxItems = Number(next)
-    if (token === "--explore-budget-seconds" && next) args.exploreBudgetSeconds = Number(next)
-    if (token === "--explore-max-depth" && next) args.exploreMaxDepth = Number(next)
-    if (token === "--explore-max-states" && next) args.exploreMaxStates = Number(next)
-    if (token === "--explore-engine" && next && (next === "builtin" || next === "crawlee"))
+    }
+    if (token === "--base-url" && next) {
+      args.baseUrl = next
+    }
+    if (token === "--app" && next) {
+      args.app = next
+    }
+    if (token === "--bundle-id" && next) {
+      args.bundleId = next
+    }
+    if (token === "--diagnostics-max-items" && next) {
+      args.diagnosticsMaxItems = Number(next)
+    }
+    if (token === "--explore-budget-seconds" && next) {
+      args.exploreBudgetSeconds = Number(next)
+    }
+    if (token === "--explore-max-depth" && next) {
+      args.exploreMaxDepth = Number(next)
+    }
+    if (token === "--explore-max-states" && next) {
+      args.exploreMaxStates = Number(next)
+    }
+    if (token === "--explore-engine" && next && (next === "builtin" || next === "crawlee")) {
       args.exploreEngine = next
-    if (token === "--chaos-seed" && next) args.chaosSeed = Number(next)
-    if (token === "--chaos-budget-seconds" && next) args.chaosBudgetSeconds = Number(next)
-    if (token === "--chaos-ratio-click" && next) args.chaosClickRatio = Number(next)
-    if (token === "--chaos-ratio-input" && next) args.chaosInputRatio = Number(next)
-    if (token === "--chaos-ratio-scroll" && next) args.chaosScrollRatio = Number(next)
-    if (token === "--chaos-ratio-keyboard" && next) args.chaosKeyboardRatio = Number(next)
-    if (token === "--load-vus" && next) args.loadVus = Number(next)
-    if (token === "--load-duration-seconds" && next) args.loadDurationSeconds = Number(next)
-    if (token === "--load-request-timeout-ms" && next) args.loadRequestTimeoutMs = Number(next)
-    if (token === "--load-engine" && next) args.loadEngine = next
-    if (token === "--a11y-max-issues" && next) args.a11yMaxIssues = Number(next)
+    }
+    if (token === "--chaos-seed" && next) {
+      args.chaosSeed = Number(next)
+    }
+    if (token === "--chaos-budget-seconds" && next) {
+      args.chaosBudgetSeconds = Number(next)
+    }
+    if (token === "--chaos-ratio-click" && next) {
+      args.chaosClickRatio = Number(next)
+    }
+    if (token === "--chaos-ratio-input" && next) {
+      args.chaosInputRatio = Number(next)
+    }
+    if (token === "--chaos-ratio-scroll" && next) {
+      args.chaosScrollRatio = Number(next)
+    }
+    if (token === "--chaos-ratio-keyboard" && next) {
+      args.chaosKeyboardRatio = Number(next)
+    }
+    if (token === "--load-vus" && next) {
+      args.loadVus = Number(next)
+    }
+    if (token === "--load-duration-seconds" && next) {
+      args.loadDurationSeconds = Number(next)
+    }
+    if (token === "--load-request-timeout-ms" && next) {
+      args.loadRequestTimeoutMs = Number(next)
+    }
+    if (token === "--load-engine" && next) {
+      args.loadEngine = next
+    }
+    if (token === "--a11y-max-issues" && next) {
+      args.a11yMaxIssues = Number(next)
+    }
     if (token === "--a11y-engine" && next && (next === "axe" || next === "builtin")) {
       args.a11yEngine = next
     }
-    if (token === "--perf-preset" && next && (next === "mobile" || next === "desktop"))
+    if (token === "--perf-preset" && next && (next === "mobile" || next === "desktop")) {
       args.perfPreset = next
-    if (token === "--perf-engine" && next && (next === "lhci" || next === "builtin"))
+    }
+    if (token === "--perf-engine" && next && (next === "lhci" || next === "builtin")) {
       args.perfEngine = next
+    }
     if (
       token === "--visual-engine" &&
       next &&
@@ -316,21 +420,39 @@ export function parseArgs(argv: string[]): Args {
     ) {
       args.visualEngine = next
     }
-    if (token === "--visual-mode" && next && (next === "diff" || next === "update"))
+    if (token === "--visual-mode" && next && (next === "diff" || next === "update")) {
       args.visualMode = next
-    if (token === "--ai-review" && next && (next === "true" || next === "false"))
+    }
+    if (token === "--ai-review" && next && (next === "true" || next === "false")) {
       args.aiReview = next === "true"
-    if (token === "--ai-review-max-artifacts" && next) args.aiReviewMaxArtifacts = Number(next)
-    if (token === "--soak-duration-seconds" && next) args.soakDurationSeconds = Number(next)
-    if (token === "--soak-interval-seconds" && next) args.soakIntervalSeconds = Number(next)
+    }
+    if (token === "--ai-review-max-artifacts" && next) {
+      args.aiReviewMaxArtifacts = Number(next)
+    }
+    if (token === "--soak-duration-seconds" && next) {
+      args.soakDurationSeconds = Number(next)
+    }
+    if (token === "--soak-interval-seconds" && next) {
+      args.soakIntervalSeconds = Number(next)
+    }
     if (token === "--autostart-target" && next && (next === "true" || next === "false")) {
       args.autostartTarget = next === "true"
     }
-    if (token === "--gemini-model" && next) args.geminiModel = next
-    if (token === "--gemini-thinking-level" && next) args.geminiThinkingLevel = next
-    if (token === "--gemini-tool-mode" && next) args.geminiToolMode = next
-    if (token === "--gemini-context-cache-mode" && next) args.geminiContextCacheMode = next
-    if (token === "--gemini-media-resolution" && next) args.geminiMediaResolution = next
+    if (token === "--gemini-model" && next) {
+      args.geminiModel = next
+    }
+    if (token === "--gemini-thinking-level" && next) {
+      args.geminiThinkingLevel = next
+    }
+    if (token === "--gemini-tool-mode" && next) {
+      args.geminiToolMode = next
+    }
+    if (token === "--gemini-context-cache-mode" && next) {
+      args.geminiContextCacheMode = next
+    }
+    if (token === "--gemini-media-resolution" && next) {
+      args.geminiMediaResolution = next
+    }
   }
 
   return args
@@ -381,6 +503,8 @@ async function main(): Promise<void> {
     validateRunOverrides(args)
     const profile = args.profile ?? "pr"
     const target = args.target ?? "web.local"
+    const profileConfig = loadProfileConfig(profile)
+    assertDesktopOperatorManualGate(args, profileConfig.steps)
     const result = await runProfile(profile, target, args.runId, {
       baseUrl: args.baseUrl,
       app: args.app,
@@ -650,6 +774,7 @@ async function main(): Promise<void> {
   }
 
   if (args.command === "desktop-smoke") {
+    assertDesktopOperatorManualGate(args)
     const target = loadTargetConfig(args.target ?? "tauri.macos")
     const result = await runDesktopSmoke(baseDir, {
       targetType: target.type,
@@ -662,6 +787,7 @@ async function main(): Promise<void> {
   }
 
   if (args.command === "desktop-e2e") {
+    assertDesktopOperatorManualGate(args)
     const target = loadTargetConfig(args.target ?? "tauri.macos")
     const result = await runDesktopE2E(baseDir, {
       targetType: target.type,
@@ -675,6 +801,7 @@ async function main(): Promise<void> {
 
   if (args.command === "desktop-business") {
     validateRunOverrides(args)
+    assertDesktopOperatorManualGate(args)
     const target = loadTargetConfig(args.target ?? "tauri.macos")
     const defaultProfile = target.type === "swift" ? "swift.regression" : "tauri.regression"
     const profile = loadProfileConfig(args.profile ?? defaultProfile)
@@ -691,6 +818,7 @@ async function main(): Promise<void> {
 
   if (args.command === "desktop-soak") {
     validateRunOverrides(args)
+    assertDesktopOperatorManualGate(args)
     const profile = loadProfileConfig(args.profile ?? "tauri.smoke")
     const target = loadTargetConfig(args.target ?? "tauri.macos")
     const result = await runDesktopSoak(

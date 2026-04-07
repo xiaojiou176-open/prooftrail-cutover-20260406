@@ -7,7 +7,7 @@ const secretPatterns = [
   /AKIA[0-9A-Z]{16}/,
   /ghp_[A-Za-z0-9]{20,}/,
   /sk-[A-Za-z0-9_-]{20,}/,
-  /BEGIN PRIVATE KEY/,
+  new RegExp("BEGIN " + "PRIVATE KEY"),
   /\bBearer\s+(?!SCRUBBED_|PLACEHOLDER_|TEST_|EXAMPLE_)[A-Za-z0-9.-]{12,}/,
   /\bsession_id=(?!SCRUBBED_|PLACEHOLDER_|TEST_|EXAMPLE_)[A-Za-z0-9.-]{8,}/i,
   /\bcsrf_cookie=(?!SCRUBBED_|PLACEHOLDER_|TEST_|EXAMPLE_)[A-Za-z0-9.-]{8,}/i,
@@ -19,7 +19,9 @@ const failures = []
 const targets = collectTrackedPublicSurfaceTargets()
 
 for (const target of targets) {
-  if (!fs.existsSync(target)) continue
+  if (!fs.existsSync(target)) {
+    continue
+  }
   const content = fs.readFileSync(target, "utf8")
   for (const pattern of secretPatterns) {
     if (pattern.test(content)) {
@@ -31,7 +33,9 @@ for (const target of targets) {
 
 if (failures.length > 0) {
   console.error("[public-redaction] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 

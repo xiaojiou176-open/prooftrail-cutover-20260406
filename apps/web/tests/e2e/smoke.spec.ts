@@ -100,7 +100,9 @@ pwTest.beforeEach(async ({ page }) => {
       })
       return
     }
-    throw new Error(`[frontend-smoke] Unhandled API route: ${route.request().method()} ${url.pathname}`)
+    throw new Error(
+      `[frontend-smoke] Unhandled API route: ${route.request().method()} ${url.pathname}`
+    )
   })
   await page.route("**/health/**", async (route) => {
     const url = new URL(route.request().url())
@@ -111,7 +113,13 @@ pwTest.beforeEach(async ({ page }) => {
         body: JSON.stringify({
           uptime_seconds: 120,
           task_total: 0,
-          task_counts: { queued: 0, running: 0, success: 0, failed: 0, cancelled: 0 },
+          task_counts: {
+            queued: 0,
+            running: 0,
+            success: 0,
+            failed: 0,
+            cancelled: 0,
+          },
           metrics: { requests_total: 1, rate_limited: 0 },
         }),
       })
@@ -131,7 +139,9 @@ pwTest.beforeEach(async ({ page }) => {
       })
       return
     }
-    throw new Error(`[frontend-smoke] Unhandled health route: ${route.request().method()} ${url.pathname}`)
+    throw new Error(
+      `[frontend-smoke] Unhandled health route: ${route.request().method()} ${url.pathname}`
+    )
   })
   await page.addInitScript(() => {
     window.localStorage.setItem("ab_onboarding_done", "1")
@@ -142,9 +152,16 @@ pwTest.beforeEach(async ({ page }) => {
 pwTest("@smoke frontend shell and primary navigation", async ({ page }) => {
   await page.goto("/")
 
+  const primaryNavigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  })
   await expect(page.getByRole("heading", { level: 1, name: "ProofTrail" })).toBeVisible()
-  await expect(page.getByRole("tablist", { name: "Primary navigation" })).toBeVisible()
-  await expect(page.getByRole("tab", { name: "Quick Launch" })).toHaveAttribute("aria-selected", "true")
+  await expect(primaryNavigation).toBeVisible()
+  await expect(primaryNavigation.getByRole("tablist")).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Quick Launch" })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  )
   await expect(page.getByRole("tablist", { name: "Command categories" })).toBeVisible()
   const sidebarToggle = page.getByLabel("Collapse parameter rail")
   await expect(sidebarToggle).toHaveAttribute("aria-expanded", "true")
@@ -160,7 +177,7 @@ pwTest("@smoke frontend shell and primary navigation", async ({ page }) => {
   await taskCenterTab.click()
   await expect(taskCenterTab).toHaveAttribute("aria-selected", "true")
   await expect(taskCenterTab).toHaveAttribute("aria-controls", "app-view-tasks-panel")
-  const taskCenterPanel = page.locator('section#app-view-tasks-panel')
+  const taskCenterPanel = page.locator("section#app-view-tasks-panel")
   await expect(taskCenterPanel).toHaveAttribute("role", "tabpanel")
   await expect(taskCenterPanel).toHaveAttribute("aria-labelledby", "console-tab-tasks")
 
@@ -181,6 +198,8 @@ pwTest("@smoke frontend shell and primary navigation", async ({ page }) => {
   await expect(flowDraftTab).toHaveAttribute("aria-selected", "true")
   await expect(page.getByRole("heading", { name: "Key outcome and next action" })).toBeVisible()
   await expect(
-    page.getByText("Advanced workshop (optional): system diagnostics, flow editing, and debugging evidence")
+    page.getByText(
+      "Advanced workshop (optional): system diagnostics, flow editing, and debugging evidence"
+    )
   ).toBeVisible()
 })
