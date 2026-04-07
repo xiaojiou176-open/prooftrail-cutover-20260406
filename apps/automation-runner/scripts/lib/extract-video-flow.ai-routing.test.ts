@@ -337,7 +337,7 @@ test("ai-input-pack trims transcript/events/html and summarizes HAR entries", ()
     transcript: [
       { t: "0", text: "  first line  " },
       { t: "1", text: "" },
-      { t: "2", text: "second line that is very long" },
+      { t: "2", text: "later line that is very long" },
     ],
     events: [
       {
@@ -372,7 +372,7 @@ test("ai-input-pack trims transcript/events/html and summarizes HAR entries", ()
 
   assert.equal(packed.payload.transcript.length, 2)
   assert.equal(packed.payload.transcript[0]?.text, "first line")
-  assert.equal(packed.payload.transcript[1]?.text, "secon")
+  assert.equal(packed.payload.transcript[1]?.text, "later")
   assert.equal(packed.payload.eventLog.length, 1)
   assert.equal(packed.payload.eventLog[0]?.value, "value")
   assert.equal(packed.payload.htmlSnippet, "<div>abc")
