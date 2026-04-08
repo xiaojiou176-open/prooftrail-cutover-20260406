@@ -21,12 +21,11 @@ Registry-facing MCP package/install contract:
 Optional advanced tool groups:
 `UIQ_MCP_TOOL_GROUPS=advanced,register,proof,analysis`
 
-The repo mainline is the public default road.
-This MCP page is the operator side road.
+<!-- markdownlint-disable-next-line MD013 -->
+The repo mainline is the public default road, while this MCP page is the operator side road.
 
-If you use an internal generic `run` surface,
-it should still resolve to that same repo mainline
-rather than the manual workshop pipeline.
+<!-- markdownlint-disable-next-line MD013 -->
+If you use an internal generic `run` surface, it should still resolve to that same repo mainline rather than the manual workshop pipeline.
 
 When you document an internal generic `run` surface,
 it should still resolve to that same repo mainline
