@@ -8,10 +8,10 @@
         "dependencies": {},
         "devDependencies": {
           "@modelcontextprotocol/sdk": "1.28.0",
-          "@playwright/test": "1.58.2",
+          "@playwright/test": "1.59.1",
           "@vitejs/plugin-react": "5.1.4",
           "@vitest/coverage-v8": "3.2.4",
-          "playwright": "1.58.2",
+          "playwright": "1.59.1",
           "react": "19.2.4",
           "react-dom": "19.2.4",
           "typescript": "5.9.3",
@@ -31,7 +31,7 @@
         "devDependencies": {
           "@vitejs/plugin-react": "4.7.0",
           "@vitest/coverage-v8": "3.2.4",
-          "playwright": "1.58.2",
+          "playwright": "1.59.1",
           "typescript": "5.9.3",
           "vite": "6.4.1",
           "vitest": "3.2.4"
@@ -44,10 +44,10 @@
         "dependencies": {},
         "devDependencies": {
           "@google/genai": "1.42.0",
-          "@playwright/test": "1.58.2",
+          "@playwright/test": "1.59.1",
           "curlconverter": "4.12.0",
           "har-to-k6": "0.14.10",
-          "playwright": "1.58.2",
+          "playwright": "1.59.1",
           "tsx": "4.21.0",
           "typescript": "5.9.3"
         }
@@ -70,7 +70,7 @@
   "dockerToolchain": {
     "nodeImageDigestPrefix": "docker.io/library/node:20-bookworm-slim@sha256:",
     "pythonImageDigestPrefix": "docker.io/library/python:3.11-slim-bookworm@sha256:",
-    "playwright": "1.58.2",
+    "playwright": "1.59.1",
     "uv": "0.8.15",
     "actionlint": "1.7.11",
     "gitleaks": "8.24.2",
