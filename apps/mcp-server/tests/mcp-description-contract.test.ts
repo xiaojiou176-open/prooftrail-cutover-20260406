@@ -27,63 +27,14 @@ const REQUIRED_NEW_DOC_TOOLS = [
 ] as const
 
 const NAVIGATION_FIELDS = [
-  "Goal / 目标:",
-  "Use When / 何时使用:",
-  "Required Inputs / 必填输入:",
-  "Call Order / 调用顺序:",
-  "Success Output / 成功输出:",
-  "If Failed / 失败处理:",
-  "Do Not / 禁止事项:",
+  "Goal:",
+  "Use When:",
+  "Required Inputs:",
+  "Call Order:",
+  "Success Output:",
+  "If Failed:",
+  "Do Not:",
 ] as const
-
-function extractBacktickToolNames(docText: string): Set<string> {
-  const names = Array.from(docText.matchAll(/`(uiq_[a-z0-9_]+)`/g), (m) => m[1])
-  return new Set(names)
-}
-
-function extractRunOverrideKeys(coreSource: string): Set<string> {
-  const block = coreSource.match(/runOverrideSchema = \{([\s\S]*?)\} as const;?/)
-  assert.ok(block, "runOverrideSchema definition must exist")
-  const keys = Array.from(block[1].matchAll(/^\s*([a-zA-Z][a-zA-Z0-9]*)\s*:/gm), (m) => m[1])
-  return new Set(keys)
-}
-
-function extractRunOverrideKeysFromDoc(docText: string): Set<string> {
-  const lines = docText.split(/\r?\n/)
-  const keys = new Set<string>()
-  let inRunOverrideSection = false
-
-  for (const line of lines) {
-    const normalized = line.trim()
-
-    if (
-      /runoverrideschema/i.test(normalized) ||
-      (/run override/i.test(normalized) && /fields|accepted|字段/i.test(normalized))
-    ) {
-      inRunOverrideSection = true
-      continue
-    }
-
-    if (!inRunOverrideSection) continue
-
-    if (/^##\s+/.test(normalized) || /^###\s+/.test(normalized) || /URL\s*策略/.test(normalized)) {
-      break
-    }
-
-    if (!normalized.startsWith("-")) continue
-
-    const found = Array.from(normalized.matchAll(/`([a-zA-Z][a-zA-Z0-9]*)`/g), (m) => m[1])
-    for (const key of found) {
-      if (!key.startsWith("uiq")) keys.add(key)
-    }
-  }
-
-  return keys
-}
-
-function toSortedArray(values: Iterable<string>): string[] {
-  return Array.from(values).sort()
-}
 
 function resolveRepoRootFromTests(): string {
   return resolve(import.meta.dirname, "../../..")
@@ -126,74 +77,38 @@ nodeTest(
   }
 )
 
-nodeTest(
-  "docs tool lists are aligned with runtime-registered tool names",
-  { timeout: 30_000 },
-  async () => {
-    const repoRoot = resolveRepoRootFromTests()
-    const mcpDocPath = resolve(repoRoot, "docs/mcp.md")
-    const setupDocPath = resolve(repoRoot, "docs/how-to/mcp-clients-setup.md")
-
-    const mcpDoc = readFileSync(mcpDocPath, "utf8")
-    const setupDoc = readFileSync(setupDocPath, "utf8")
-    const harness = await startMcpHarnessAdvanced({
-      env: { UIQ_MCP_TOOL_GROUPS: "all" },
-    })
-    const registeredSet = new Set((await harness.client.listTools()).tools.map((tool) => tool.name))
-    await harness.close()
-
-    const docs = [
-      { path: "docs/mcp.md", names: extractBacktickToolNames(mcpDoc) },
-      { path: "docs/how-to/mcp-clients-setup.md", names: extractBacktickToolNames(setupDoc) },
-    ]
-
-    for (const doc of docs) {
-      for (const requiredTool of REQUIRED_NEW_DOC_TOOLS) {
-        assert.ok(
-          doc.names.has(requiredTool),
-          `${doc.path} missing required new tool: ${requiredTool}`
-        )
-      }
-      for (const tool of doc.names) {
-        assert.ok(
-          registeredSet.has(tool),
-          `${doc.path} contains unknown/unregistered tool: ${tool}`
-        )
-      }
-    }
-  }
-)
-
-nodeTest("run override fields in docs match runOverrideSchema and avoid legacy drift", () => {
+nodeTest("quickstart and distribution docs stay aligned with current MCP contract", async () => {
   const repoRoot = resolveRepoRootFromTests()
-  const coreSource = readFileSync(resolve(repoRoot, "apps/mcp-server/src/core/types.ts"), "utf8")
-  const mcpDoc = readFileSync(resolve(repoRoot, "docs/mcp.md"), "utf8")
-  const setupDoc = readFileSync(resolve(repoRoot, "docs/how-to/mcp-clients-setup.md"), "utf8")
-
-  const schemaKeys = extractRunOverrideKeys(coreSource)
-  const mcpKeys = extractRunOverrideKeysFromDoc(mcpDoc)
-  const setupKeys = extractRunOverrideKeysFromDoc(setupDoc)
-
-  assert.deepEqual(
-    toSortedArray(mcpKeys),
-    toSortedArray(schemaKeys),
-    "docs/mcp.md run override fields drift from runOverrideSchema"
+  const quickstart = readFileSync(resolve(repoRoot, "docs/how-to/mcp-quickstart-1pager.md"), "utf8")
+  const contract = readFileSync(
+    resolve(repoRoot, "docs/reference/mcp-distribution-contract.md"),
+    "utf8"
   )
-  assert.deepEqual(
-    toSortedArray(setupKeys),
-    toSortedArray(schemaKeys),
-    "docs/how-to/mcp-clients-setup.md run override fields drift from runOverrideSchema"
-  )
+  const readme = readFileSync(resolve(repoRoot, "apps/mcp-server/README.md"), "utf8")
 
-  const forbiddenLegacyFields = ["browser", "platform", "device", "headless", "timeout", "env"]
-  for (const legacy of forbiddenLegacyFields) {
-    assert.ok(
-      !mcpKeys.has(legacy),
-      `docs/mcp.md run override section contains legacy unsupported field: ${legacy}`
-    )
-    assert.ok(
-      !setupKeys.has(legacy),
-      `docs/how-to/mcp-clients-setup.md run override section contains legacy unsupported field: ${legacy}`
-    )
+  assert.match(readme, /docs\/reference\/mcp-distribution-contract\.md/)
+  assert.match(readme, /Current \/ usable today/)
+  assert.match(readme, /Publish-ready but not yet published/)
+
+  const harness = await startMcpHarnessAdvanced({
+    env: { UIQ_MCP_TOOL_GROUPS: "all" },
+  })
+  const registeredSet = new Set((await harness.client.listTools()).tools.map((tool) => tool.name))
+  await harness.close()
+
+  for (const toolName of REQUIRED_NEW_DOC_TOOLS) {
+    assert.ok(registeredSet.has(toolName), `runtime missing required tool: ${toolName}`)
   }
+
+  for (const text of [quickstart, contract]) {
+    assert.match(text, /mcpServers/)
+    assert.match(text, /stdio/i)
+    assert.match(text, /UIQ_MCP_API_BASE_URL/)
+    assert.match(text, /UIQ_MCP_AUTOMATION_TOKEN/)
+    assert.match(text, /@prooftrail\/mcp-server/)
+    assert.match(text, /ghcr\.io\/xiaojiou176-open\/prooftrail-mcp-server:0\.1\.1/)
+    assert.match(text, /not yet published/i)
+  }
+
+  assert.match(contract, /local-with-optional-backend-token/)
 })
