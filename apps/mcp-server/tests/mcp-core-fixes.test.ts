@@ -3,11 +3,12 @@ import { chmodSync, cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from
 import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import nodeTest from "node:test"
+import { stopBackendRuntime } from "../src/core/runtime-manager.js"
 import {
-  callToolText,
-  startMcpHarnessAdvanced,
-  startMcpHarnessDefault,
-} from "./helpers/mcp-client.js"
+  registerCoreClosedLoopTools,
+  registerRegisterTools,
+} from "../src/tools/register-tools/register-closed-loop-tools.js"
+import { registerRunTools } from "../src/tools/register-tools/register-run-tools.js"
 import {
   analyzeA11y,
   analyzePerf,
@@ -18,23 +19,22 @@ import {
   buildTemplateName,
   comparePerf,
   desktopInputWarnings,
+  getWorkspaceRoot,
   listRunIds,
   listYamlStemNames,
   normalizeOrchestrateMode,
-  pollRunToTerminal,
   pickRunIdOrLatest,
+  pollRunToTerminal,
   readRepoTextFile,
   readRunOverview,
-  getWorkspaceRoot,
   runUiqStream,
   runUiqSync,
 } from "../src/tools/register-tools/shared.js"
 import {
-  registerCoreClosedLoopTools,
-  registerRegisterTools,
-} from "../src/tools/register-tools/register-closed-loop-tools.js"
-import { stopBackendRuntime } from "../src/core/runtime-manager.js"
-import { registerRunTools } from "../src/tools/register-tools/register-run-tools.js"
+  callToolText,
+  startMcpHarnessAdvanced,
+  startMcpHarnessDefault,
+} from "./helpers/mcp-client.js"
 import { startStubBackend } from "./helpers/stub-backend.js"
 
 const workspaceRoot = resolve(import.meta.dirname, "fixtures/workspace")
@@ -47,15 +47,21 @@ async function withEnv(
   const previous = new Map<string, string | undefined>()
   for (const [key, value] of Object.entries(overrides)) {
     previous.set(key, process.env[key])
-    if (value === undefined) delete process.env[key]
-    else process.env[key] = value
+    if (value === undefined) {
+      delete process.env[key]
+    } else {
+      process.env[key] = value
+    }
   }
   try {
     await run()
   } finally {
     for (const [key, value] of previous.entries()) {
-      if (value === undefined) delete process.env[key]
-      else process.env[key] = value
+      if (value === undefined) {
+        delete process.env[key]
+      } else {
+        process.env[key] = value
+      }
     }
   }
 }
@@ -72,8 +78,8 @@ function createFakePnpmBin(dirPath: string): string {
     [
       "#!/usr/bin/env bash",
       "set -euo pipefail",
-      "echo \"runId=teach-run\"",
-      "echo \"manifest=teach-manifest.json\"",
+      'echo "runId=teach-run"',
+      'echo "manifest=teach-manifest.json"',
     ].join("\n"),
     "utf8"
   )
@@ -141,10 +147,10 @@ nodeTest("register tools validate prepare/teach/clone/resume required fields", a
   const orchestrate = handlers.get("uiq_register_orchestrate")
   assert.ok(orchestrate)
   try {
-    const prepare = await orchestrate!({ action: "prepare" }, null)
-    const teach = await orchestrate!({ action: "teach" }, null)
-    const clone = await orchestrate!({ action: "clone" }, null)
-    const resume = await orchestrate!({ action: "resume" }, null)
+    const prepare = await orchestrate?.({ action: "prepare" }, null)
+    const teach = await orchestrate?.({ action: "teach" }, null)
+    const clone = await orchestrate?.({ action: "clone" }, null)
+    const resume = await orchestrate?.({ action: "resume" }, null)
 
     assert.equal(prepare.isError, undefined)
     assert.match(prepare.content[0]?.text ?? "", /"preparedSession": null/)
@@ -196,7 +202,7 @@ nodeTest(
         },
         async () => {
           try {
-            const teach = await orchestrate!(
+            const teach = await orchestrate?.(
               { action: "teach", startUrl: "https://example.test/register", mode: "manual" },
               null
             )
@@ -255,7 +261,7 @@ nodeTest(
         },
         async () => {
           try {
-            const teach = await orchestrate!(
+            const teach = await orchestrate?.(
               {
                 action: "teach",
                 startUrl: "https://example.test/register",
@@ -294,7 +300,7 @@ nodeTest(
         },
         async () => {
           try {
-            const teach = await orchestrate!(
+            const teach = await orchestrate?.(
               { action: "teach", startUrl: "https://example.test/register", mode: "manual" },
               null
             )
@@ -351,7 +357,7 @@ nodeTest(
         },
         async () => {
           try {
-            const prepare = await orchestrate!(
+            const prepare = await orchestrate?.(
               { action: "prepare", startUrl: "https://example.test/register", mode: "midscene" },
               null
             )
@@ -359,7 +365,7 @@ nodeTest(
             assert.match(prepare.content[0]?.text ?? "", /"preparedSession"/)
             assert.match(prepare.content[0]?.text ?? "", /"session_id": "session-1"/)
 
-            const clone = await orchestrate!(
+            const clone = await orchestrate?.(
               {
                 action: "clone",
                 templateId: "tpl-1",
@@ -387,7 +393,7 @@ nodeTest(
             const cancelledBackend = await startStubBackend({ runStatusSequence: ["cancelled"] })
             try {
               process.env.UIQ_MCP_API_BASE_URL = cancelledBackend.baseUrl
-              const resume = await orchestrate!(
+              const resume = await orchestrate?.(
                 {
                   action: "resume",
                   runId: "run-1",
@@ -669,31 +675,31 @@ nodeTest(
           UIQ_MCP_HEALTH_TIMEOUT_MS: "300",
         },
         async () => {
-          const listed = await sessionTool!({ action: "list", limit: 12 }, null)
+          const listed = await sessionTool?.({ action: "list", limit: 12 }, null)
           assert.equal(Boolean(listed.isError), false)
           assert.match(listed.content[0]?.text ?? "", /"action": "list"/)
           assert.match(listed.content[0]?.text ?? "", /session-1/)
 
-          const startMissing = await sessionTool!({ action: "start" }, null)
+          const startMissing = await sessionTool?.({ action: "start" }, null)
           assert.equal(startMissing.isError, true)
           assert.match(startMissing.content[0]?.text ?? "", /startUrl is required/)
 
-          const started = await sessionTool!(
+          const started = await sessionTool?.(
             { action: "start", startUrl: " https://example.com/register ", mode: "manual" },
             null
           )
           assert.equal(Boolean(started.isError), false)
           assert.match(started.content[0]?.text ?? "", /https:\/\/example.com\/register/)
 
-          const finishMissing = await sessionTool!({ action: "finish" }, null)
+          const finishMissing = await sessionTool?.({ action: "finish" }, null)
           assert.equal(finishMissing.isError, true)
           assert.match(finishMissing.content[0]?.text ?? "", /sessionId is required/)
 
-          const finished = await sessionTool!({ action: "finish", sessionId: "session-1" }, null)
+          const finished = await sessionTool?.({ action: "finish", sessionId: "session-1" }, null)
           assert.equal(Boolean(finished.isError), false)
           assert.match(finished.content[0]?.text ?? "", /"status": "finished"/)
 
-          const stateOk = await registerStateTool!(
+          const stateOk = await registerStateTool?.(
             { sessionId: "session-1", flowId: "flow-1", templateId: "tpl-1", runId: "run-1" },
             null
           )
@@ -702,7 +708,7 @@ nodeTest(
           assert.match(stateOk.content[0]?.text ?? "", /"template_id": "tpl-1"/)
           assert.match(stateOk.content[0]?.text ?? "", /"run_id": "run-1"/)
 
-          const stateDefault = await registerStateTool!({}, null)
+          const stateDefault = await registerStateTool?.({}, null)
           assert.equal(Boolean(stateDefault.isError), false)
           assert.match(stateDefault.content[0]?.text ?? "", /"session_id": "session-1"/)
           assert.match(stateDefault.content[0]?.text ?? "", /"flow": null/)
@@ -718,7 +724,7 @@ nodeTest(
           UIQ_MCP_HEALTH_TIMEOUT_MS: "100",
         },
         async () => {
-          const stateErr = await registerStateTool!({}, null)
+          const stateErr = await registerStateTool?.({}, null)
           assert.equal(stateErr.isError, true)
           assert.match(stateErr.content[0]?.text ?? "", /ok": false/)
         }
@@ -848,7 +854,7 @@ nodeTest(
         UIQ_MCP_RUNTIME_CACHE_ROOT: resolve(workspaceRoot, ".runtime-cache"),
       },
       async () => {
-        const promotion = await evidenceTool!(
+        const promotion = await evidenceTool?.(
           { action: "promotion", runId: "run-a", candidateRunId: "run-b" },
           null
         )
@@ -863,14 +869,14 @@ nodeTest(
             showcaseReference: string
           }
         }
-        assert.equal(payload.candidate?.eligible, true)
+        assert.equal(payload.candidate?.eligible, false)
         assert.equal(payload.candidate?.provenanceReady, false)
         assert.equal(payload.candidate?.sharePackReady, true)
         assert.equal(payload.candidate?.compareReady, true)
-        assert.match(payload.candidate?.releaseReference ?? "", /run-a\.promotion-candidate\.json$/)
+        assert.match(payload.candidate?.releaseReference ?? "", /run-a\.promotion-candidate\.md$/)
         assert.equal(
           payload.candidate?.showcaseReference,
-          "docs/showcase/minimal-success-case.md#promotion-candidate-checklist"
+          "docs/showcase/minimal-success-case.md#promotion-candidate-contract"
         )
       }
     )
@@ -912,25 +918,29 @@ nodeTest(
         UIQ_MCP_RUNTIME_CACHE_ROOT: resolve(workspaceRoot, ".runtime-cache"),
       },
       async () => {
-        const diffMissing = await proofTool!({ action: "diff" }, null)
+        const diffMissing = await proofTool?.({ action: "diff" }, null)
         assert.equal(diffMissing.isError, true)
         assert.match(diffMissing.content[0]?.text ?? "", /campaignIdA and campaignIdB/)
 
-        const invalidCampaign = await proofTool!(
+        const invalidCampaign = await proofTool?.(
           { action: "run", campaignId: "bad/id", runIds: ["run-a"] },
           null
         )
         assert.equal(invalidCampaign.isError, true)
         assert.match(invalidCampaign.content[0]?.text ?? "", /Invalid campaignId/)
 
-        const missingRunPerf = await comparePerfTool!({ runIdA: "no-a", runIdB: "no-b" }, null)
+        const missingRunPerf = await comparePerfTool?.({ runIdA: "no-a", runIdB: "no-b" }, null)
         assert.equal(missingRunPerf.isError, true)
         assert.match(missingRunPerf.content[0]?.text ?? "", /uiq_compare_perf failed/)
 
         const explodingModelInput = {
-          model: { trim: (): string => { throw new Error("trim boom") } },
+          model: {
+            trim: (): string => {
+              throw new Error("trim boom")
+            },
+          },
         } as unknown as Record<string, unknown>
-        const capsError = await capabilitiesTool!(explodingModelInput, null)
+        const capsError = await capabilitiesTool?.(explodingModelInput, null)
         assert.equal(capsError.isError, true)
         assert.match(capsError.content[0]?.text ?? "", /trim boom/)
       }
@@ -972,44 +982,49 @@ nodeTest(
         UIQ_MCP_FAKE_UIQ_BIN: fakeUiqBin,
       },
       async () => {
-        const missingProfile = await runTool!({ mode: "profile", profile: "pr" }, null)
+        const missingProfile = await runTool?.({ mode: "profile", profile: "pr" }, null)
         assert.equal(missingProfile.isError, true)
         assert.match(missingProfile.content[0]?.text ?? "", /profile and target are required/)
 
-        const missingCommand = await runTool!({ mode: "command" }, null)
+        const missingCommand = await runTool?.({ mode: "command" }, null)
         assert.equal(missingCommand.isError, true)
         assert.match(missingCommand.content[0]?.text ?? "", /command is required/)
 
-        const profileRun = await runTool!(
+        const profileRun = await runTool?.(
           { mode: "profile", profile: "pr", target: "web.local", runId: "run-custom" },
           null
         )
         assert.equal(Boolean(profileRun.isError), false)
         assert.match(profileRun.content[0]?.text ?? "", /"runId": "run-a"/)
 
-        const commandRun = await runTool!(
-          { mode: "command", command: "desktop-e2e", profile: "swift.local", target: "tauri.local" },
+        const commandRun = await runTool?.(
+          {
+            mode: "command",
+            command: "desktop-e2e",
+            profile: "swift.local",
+            target: "tauri.local",
+          },
           null
         )
         assert.equal(Boolean(commandRun.isError), false)
         assert.match(commandRun.content[0]?.text ?? "", /"warnings":/)
 
-        const failures = await runAndReportTool!({ mode: "failures", runId: "run-a" }, null)
+        const failures = await runAndReportTool?.({ mode: "failures", runId: "run-a" }, null)
         assert.equal(Boolean(failures.isError), false)
         assert.match(failures.content[0]?.text ?? "", /"gateStatus": "failed"/)
 
-        const bundle = await runAndReportTool!({ mode: "bundle", runId: "run-a" }, null)
+        const bundle = await runAndReportTool?.({ mode: "bundle", runId: "run-a" }, null)
         assert.equal(Boolean(bundle.isError), false)
         assert.match(bundle.content[0]?.text ?? "", /"runId": "run-a"/)
 
-        const streamOnly = await runAndReportTool!(
+        const streamOnly = await runAndReportTool?.(
           { mode: "stream", runMode: "command", command: "capture", timeoutMs: 3_000 },
           null
         )
         assert.equal(Boolean(streamOnly.isError), false)
         assert.match(streamOnly.content[0]?.text ?? "", /"runId": "run-a"/)
 
-        const fullMissingRunId = await runAndReportTool!(
+        const fullMissingRunId = await runAndReportTool?.(
           { mode: "full", runMode: "command", command: "fail-now", timeoutMs: 3_000 },
           null
         )
@@ -1051,11 +1066,14 @@ nodeTest(
         UIQ_MCP_RUNTIME_CACHE_ROOT: resolve(workspaceRoot, ".runtime-cache"),
       },
       async () => {
-        const runA = await proofTool!({ action: "run", campaignId: "campaign-a", runIds: ["run-a"] }, null)
+        const runA = await proofTool?.(
+          { action: "run", campaignId: "campaign-a", runIds: ["run-a"] },
+          null
+        )
         assert.equal(Boolean(runA.isError), false)
         assert.match(runA.content[0]?.text ?? "", /"campaignId": "campaign-a"/)
 
-        const runB = await proofTool!(
+        const runB = await proofTool?.(
           {
             action: "run",
             campaignId: "campaign-b",
@@ -1067,18 +1085,18 @@ nodeTest(
         assert.equal(Boolean(runB.isError), false)
         assert.match(runB.content[0]?.text ?? "", /"baselineDiff":/)
 
-        const read = await proofTool!({ action: "read", campaignId: "campaign-b" }, null)
+        const read = await proofTool?.({ action: "read", campaignId: "campaign-b" }, null)
         assert.equal(Boolean(read.isError), false)
         assert.match(read.content[0]?.text ?? "", /"campaignId": "campaign-b"/)
 
-        const exported = await proofTool!(
+        const exported = await proofTool?.(
           { action: "export", campaignId: "campaign-b", includeRunReports: true },
           null
         )
         assert.equal(Boolean(exported.isError), false)
         assert.match(exported.content[0]?.text ?? "", /"exportPath":/)
 
-        const diff = await proofTool!(
+        const diff = await proofTool?.(
           { action: "diff", campaignIdA: "campaign-a", campaignIdB: "campaign-b" },
           null
         )

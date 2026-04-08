@@ -2,8 +2,8 @@ import { spawnSync } from "node:child_process"
 import { relative, resolve } from "node:path"
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import * as z from "zod"
-import { buildPromotionCandidate } from "../../../../../packages/core/src/index.js"
-import { buildModelTargetCapabilities } from "../../../../../packages/orchestrator/index.js"
+import { buildPromotionCandidate } from "../../../../../packages/core/src/evidence-runs/promotion.js"
+import { buildModelTargetCapabilities } from "../../../../../packages/orchestrator/src/commands/catalog.js"
 import { backendBaseUrl, backendToken } from "../../core/api-client.js"
 import {
   ensureDirReady,
@@ -45,12 +45,12 @@ import {
   analyzePerf,
   analyzeSecurity,
   analyzeVisual,
+  appendRunOverrides,
   buildEvidenceSharePackRecord,
   compareEvidenceRunRecords,
   comparePerf,
-  listEvidenceRunSummaries,
   desktopInputWarnings,
-  appendRunOverrides,
+  listEvidenceRunSummaries,
   listRunIds,
   listYamlStemNames,
   pickRunIdOrLatest,
@@ -65,7 +65,11 @@ import {
 export function registerRunTools(mcpServer: McpServer): void {
   mcpServer.registerTool(
     "uiq_catalog",
-    { description: "List available configs/profiles and configs/targets/commands in this repository", inputSchema: {} },
+    {
+      description:
+        "List available configs/profiles and configs/targets/commands in this repository",
+      inputSchema: {},
+    },
     async () => {
       const profiles = listYamlStemNames(resolve(workspaceRoot(), "profiles"))
       const targets = listYamlStemNames(resolve(workspaceRoot(), "targets"))
@@ -464,12 +468,15 @@ export function registerRunTools(mcpServer: McpServer): void {
     async ({ mode, profile, command, target, runId, ...overrides }) => {
       try {
         if (mode === "profile") {
-          if (!profile || !target)
+          if (!profile || !target) {
             return invalidInput("profile and target are required for mode=profile")
+          }
           const safeProfile = sanitizeProfileTarget("profile", profile)
           const safeTarget = sanitizeProfileTarget("target", target)
           const args = ["run", "--profile", safeProfile, "--target", safeTarget]
-          if (runId) args.push("--run-id", runId)
+          if (runId) {
+            args.push("--run-id", runId)
+          }
           appendRunOverrides(args, overrides)
           const warnings = desktopInputWarnings({
             profile: safeProfile,
@@ -480,7 +487,9 @@ export function registerRunTools(mcpServer: McpServer): void {
           const result = runUiqSync(args)
           return toolJson({ ...result, warnings }, !result.ok)
         }
-        if (!command) return invalidInput("command is required for mode=command")
+        if (!command) {
+          return invalidInput("command is required for mode=command")
+        }
         const executed = executeRunCommand({ command, target, profile, runId, overrides })
         return toolJson({ ...executed.result, warnings: executed.warnings }, !executed.result.ok)
       } catch (error) {
@@ -531,24 +540,35 @@ export function registerRunTools(mcpServer: McpServer): void {
         const selectedRunMode = runMode ?? (command ? "command" : "profile")
         const args: string[] = []
         if (selectedRunMode === "profile") {
-          if (!profile || !target)
+          if (!profile || !target) {
             return invalidInput("profile and target are required for runMode=profile")
+          }
           const safeProfile = sanitizeProfileTarget("profile", profile)
           const safeTarget = sanitizeProfileTarget("target", target)
           args.push("run", "--profile", safeProfile, "--target", safeTarget)
         } else {
-          if (!command) return invalidInput("command is required for runMode=command")
+          if (!command) {
+            return invalidInput("command is required for runMode=command")
+          }
           args.push(command)
           const safeTarget = target ? sanitizeProfileTarget("target", target) : undefined
           const safeProfile = profile ? sanitizeProfileTarget("profile", profile) : undefined
-          if (safeTarget) args.push("--target", safeTarget)
-          if (safeProfile) args.push("--profile", safeProfile)
+          if (safeTarget) {
+            args.push("--target", safeTarget)
+          }
+          if (safeProfile) {
+            args.push("--profile", safeProfile)
+          }
         }
-        if (runId) args.push("--run-id", runId)
+        if (runId) {
+          args.push("--run-id", runId)
+        }
         appendRunOverrides(args, overrides)
 
         const streamResult = await runUiqStream(args, timeoutMs ?? 10 * 60 * 1000)
-        if (mode === "stream") return toolJson(streamResult, !streamResult.ok)
+        if (mode === "stream") {
+          return toolJson(streamResult, !streamResult.ok)
+        }
         if (!streamResult.runId) {
           return toolJson(
             {
@@ -593,17 +613,22 @@ export function registerRunTools(mcpServer: McpServer): void {
     async ({ source, runId, relativePath }) => {
       try {
         if (source === "artifact") {
-          if (!runId || !relativePath)
+          if (!runId || !relativePath) {
             return invalidInput("runId and relativePath are required for source=artifact")
+          }
           const text = readUtf8(safeResolveUnder(runsRoot(), runId, relativePath))
           return toolJson({ ok: true, source, runId, relativePath, text })
         }
         if (source === "manifest") {
-          if (!runId) return invalidInput("runId is required for source=manifest")
+          if (!runId) {
+            return invalidInput("runId is required for source=manifest")
+          }
           const text = readUtf8(safeResolveUnder(runsRoot(), runId, "manifest.json"))
           return toolJson({ ok: true, source, runId, text })
         }
-        if (!relativePath) return invalidInput("relativePath is required for source=repo_doc")
+        if (!relativePath) {
+          return invalidInput("relativePath is required for source=repo_doc")
+        }
         const text = readRepoTextFile(relativePath)
         return toolJson({ ok: true, source, relativePath, text })
       } catch (error) {
@@ -625,9 +650,15 @@ export function registerRunTools(mcpServer: McpServer): void {
     async ({ kind, runId, topN }) => {
       try {
         const id = pickRunIdOrLatest(runId)
-        if (kind === "a11y") return toolJson(analyzeA11y(id, topN ?? 10))
-        if (kind === "perf") return toolJson(analyzePerf(id))
-        if (kind === "visual") return toolJson(analyzeVisual(id))
+        if (kind === "a11y") {
+          return toolJson(analyzeA11y(id, topN ?? 10))
+        }
+        if (kind === "perf") {
+          return toolJson(analyzePerf(id))
+        }
+        if (kind === "visual") {
+          return toolJson(analyzeVisual(id))
+        }
         return toolJson(analyzeSecurity(id))
       } catch (error) {
         return toolJson({ ok: false, detail: (error as Error).message }, true)
@@ -814,7 +845,10 @@ export function registerRunTools(mcpServer: McpServer): void {
           }
           return toolJson({
             ok: true,
-            sharePack: buildEvidenceSharePackRecord(runId.trim(), candidateRunId?.trim() || undefined),
+            sharePack: buildEvidenceSharePackRecord(
+              runId.trim(),
+              candidateRunId?.trim() || undefined
+            ),
           })
         }
         if (action === "explain") {

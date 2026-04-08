@@ -6,6 +6,7 @@ const requiredEntrypoints = [
   { path: "docs/localized/zh-CN/README.md", sources: ["README.md", "docs/index.md"] },
   { path: "docs/showcase/minimal-success-case.md", sources: ["README.md", "docs/index.md"] },
   { path: "docs/reference/run-evidence-example.md", sources: ["README.md", "docs/index.md"] },
+  { path: "docs/reference/mcp-distribution-contract.md", sources: ["README.md", "docs/index.md"] },
   { path: "docs/archive/README.md", sources: ["docs/index.md", "docs/README.md"] },
   { path: "DISTRIBUTION.md", sources: ["README.md", "docs/index.md"] },
   { path: "INTEGRATIONS.md", sources: ["README.md", "docs/index.md"] },

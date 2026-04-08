@@ -1,0 +1,29 @@
+name: prooftrail-mcp
+version: 0.1.1
+description: Generic install skill for using ProofTrail as a governed stdio MCP surface.
+protocol: stdio
+transport: stdio
+auth: local-with-optional-backend-token
+surfaces:
+  - repo-native MCP package
+  - repo-owned install skill
+  - publish-ready Docker surface
+supported_shells:
+  - Codex
+  - Claude Code
+  - OpenCode
+  - OpenClaw
+  - OpenHands
+install_modes:
+  - local-checkout-stdio
+  - publish-ready-not-yet-published
+docs:
+  - apps/mcp-server/README.md
+  - docs/how-to/mcp-quickstart-1pager.md
+  - docs/reference/mcp-distribution-contract.md
+  - DISTRIBUTION.md
+  - INTEGRATIONS.md
+limitations:
+  - not an official plugin
+  - not a hosted service
+  - not yet published

@@ -84,6 +84,14 @@ the deepest current evidence/recovery/review loop.
 - [API builder quickstart](how-to/api-builder-quickstart.md)
 - [docs/reference/universal-api.md](reference/universal-api.md)
 - [ProofTrail MCP Server README](../apps/mcp-server/README.md)
+- [docs/reference/mcp-distribution-contract.md](reference/mcp-distribution-contract.md)
+
+## MCP Install Surfaces
+
+- [ProofTrail MCP Server README](../apps/mcp-server/README.md)
+- [MCP for Browser Automation](how-to/mcp-quickstart-1pager.md)
+- [docs/reference/mcp-distribution-contract.md](reference/mcp-distribution-contract.md)
+- [ProofTrail MCP Skill](../skills/prooftrail-mcp/SKILL.md)
 
 ## Distribution And Integration Status
 

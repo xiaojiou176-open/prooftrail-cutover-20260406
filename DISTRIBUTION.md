@@ -16,11 +16,13 @@ Current public release truth:
 | GitHub release/tag | yes | yes | yes | Current live release/tag is `v0.1.1`. |
 | GitHub Pages storefront | yes | yes | yes | Current live homepage points to GitHub Pages and returns HTTP 200. |
 | Root npm package (`prooftrail`) | yes | no | no | Root `package.json` is `private: true`, so the repo does not currently expose a publishable npm package. |
-| MCP npm package (`@uiq/mcp-server`) | yes | no | no | The package exists for repo-local use, but `apps/mcp-server/package.json` is `private: true`. |
+| MCP npm package (`@prooftrail/mcp-server`) | yes | yes | no | The package now has a publish-ready contract, but it is **not yet published**. |
 | AI prompts npm package (`@uiq/ai-prompts`) | yes | no | no | The package exists for repo-local use, but `packages/ai-prompts/package.json` is `private: true`. |
 | PyPI package (`prooftrail`) | yes | no | no | `pyproject.toml` exists, but this repo does not currently prove a PyPI release, and the Python package version is not release-synced with `v0.1.1`. |
 | MCP Registry listing | partial | no | no | The repo contains an MCP server implementation, but no registry publication or listing proof is materialized here. |
-| Skills / starter / plugin bundle metadata | no dedicated surface | no | no | This repo does not currently ship a dedicated skills package, starter bundle, or browser-plugin distribution surface. |
+| ProofTrail MCP install skill | yes | yes | no | `skills/prooftrail-mcp/` is materialized in the repo, but it is **not yet published** to any skill registry. |
+| MCP Docker image (`ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`) | yes | yes | no | The Docker surface is documented and buildable, but the image is **not yet published**. |
+| Starter / plugin bundle metadata | no dedicated surface | no | no | This repo still does not ship a dedicated starter bundle or browser-plugin distribution surface. |
 
 ## What "Ready" Means Here
 
@@ -41,6 +43,9 @@ These remain outside the current repo-side closeout scope:
 - npm publication
 - PyPI publication
 - MCP Registry submission or listing verification
+- MCP package publication read-back
+- MCP Docker image publication
+- skill registry publication
 - Chrome Web Store packaging or submission
 - social preview upload evidence
 - hosted / multi-tenant deployment rollout

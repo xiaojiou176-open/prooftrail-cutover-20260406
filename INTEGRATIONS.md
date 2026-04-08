@@ -20,6 +20,7 @@ It can sit behind coding-agent or operator workflows, but this repository does
 | HTTP API | yes | repo-native | The canonical API contract lives in `docs/reference/universal-api.md` and the checked-in generated client stays repo-local. |
 | MCP server | yes | repo-native | `apps/mcp-server/` provides the governed MCP surface for local or self-managed use. |
 | AI prompt contracts | yes | repo-native | `packages/ai-prompts/` exists as a private workspace package, not as a published registry surface. |
+| ProofTrail MCP install skill | yes | repo-native guidance | `skills/prooftrail-mcp/` explains how agent shells should install and use the current stdio surface without pretending a registry package is already live. |
 | GitHub Pages storefront | yes | public-facing | Pages explains product fit and routes people into docs, but it is not a plugin or marketplace listing. |
 
 ## Ecosystem Fit, Truthfully
@@ -42,6 +43,24 @@ integration products in this repo:
 - starter template packages
 - dedicated skills registry packages
 - formal SDK packages
+
+## What The Skill Does
+
+The ProofTrail MCP skill is an **installation and usage guide**, not a plugin.
+
+Its job is to help Codex-, Claude Code-, OpenHands-, OpenCode-, and
+OpenClaw-style shells understand:
+
+- the current install path that works today
+- the protocol and auth boundary
+- the future publish-ready names that are **not yet published**
+
+It must stay aligned with:
+
+- `apps/mcp-server/README.md`
+- `docs/how-to/mcp-quickstart-1pager.md`
+- `docs/reference/mcp-distribution-contract.md`
+- `DISTRIBUTION.md`
 
 ## How To Read The Current Repo
 

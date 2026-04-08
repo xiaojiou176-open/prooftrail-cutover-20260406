@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { startMcpServer } from "./core.js"
 
 async function main(): Promise<void> {

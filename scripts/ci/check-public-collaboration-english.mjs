@@ -7,6 +7,8 @@ const canonicalPublicFiles = [
   "README.md",
   "DISTRIBUTION.md",
   "INTEGRATIONS.md",
+  "skills/prooftrail-mcp/SKILL.md",
+  "skills/prooftrail-mcp/manifest.yaml",
   "CONTRIBUTING.md",
   "SECURITY.md",
   "SUPPORT.md",
@@ -27,6 +29,7 @@ const canonicalPublicFiles = [
   "packages/CLAUDE.md",
   "docs/README.md",
   "docs/architecture.md",
+  "docs/reference/mcp-distribution-contract.md",
   "docs/reference/dependencies-and-third-party.md",
   "docs/reference/public-surface-sanitization-policy.md",
 ]

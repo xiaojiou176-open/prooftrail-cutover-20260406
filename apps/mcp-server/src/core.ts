@@ -3,8 +3,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerMcpResources, registerMcpTools } from "./tools/register-tools.js"
 
 export const server = new McpServer({
-  name: "uiq-mcp-server",
-  version: "1.0.0",
+  name: "@prooftrail/mcp-server",
+  version: "0.1.1",
 })
 
 registerMcpTools(server)

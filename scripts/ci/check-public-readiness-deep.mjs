@@ -11,6 +11,7 @@ const commands = [
   { command: "node", args: ["scripts/ci/check-public-redaction.mjs"] },
   { command: "node", args: ["scripts/ci/check-history-sensitive-surface.mjs"] },
   { command: "node", args: ["scripts/ci/check-tracked-heavy-artifacts.mjs"] },
+  { command: "node", args: ["scripts/ci/check-skill-surface-contract.mjs"] },
   {
     command: "bash",
     args: ["scripts/ci/check-oss-redaction-tooling.sh"],

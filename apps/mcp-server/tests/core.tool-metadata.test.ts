@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import nodeTest from "node:test"
+import yaml from "yaml"
 import { startMcpHarnessDefault } from "./helpers/mcp-client.js"
 
 function extractRunOverrideKeys(coreSource: string): string[] {
@@ -52,3 +53,28 @@ nodeTest(
     }
   }
 )
+
+nodeTest("package metadata, runtime identity, and skill manifest stay aligned", () => {
+  const repoRoot = resolve(import.meta.dirname, "../../..")
+  const packageJson = JSON.parse(
+    readFileSync(resolve(repoRoot, "apps/mcp-server/package.json"), "utf8")
+  )
+  const coreSource = readFileSync(resolve(repoRoot, "apps/mcp-server/src/core.ts"), "utf8")
+  const skillManifest = yaml.parse(
+    readFileSync(resolve(repoRoot, "skills/prooftrail-mcp/manifest.yaml"), "utf8")
+  )
+
+  assert.equal(packageJson.name, "@prooftrail/mcp-server")
+  assert.equal(packageJson.version, "0.1.1")
+  assert.equal(packageJson.license, "MIT")
+  assert.equal(packageJson.publishConfig?.access, "public")
+  assert.equal(packageJson.bin?.["prooftrail-mcp"], "./dist/server.cjs")
+  assert.ok(Array.isArray(packageJson.files) && packageJson.files.includes("dist"))
+  assert.match(coreSource, /name:\s*"@prooftrail\/mcp-server"/)
+  assert.match(coreSource, /version:\s*"0\.1\.1"/)
+  assert.equal(skillManifest.name, "prooftrail-mcp")
+  assert.equal(skillManifest.version, packageJson.version)
+  assert.equal(skillManifest.protocol, "stdio")
+  assert.equal(skillManifest.transport, "stdio")
+  assert.equal(skillManifest.auth, "local-with-optional-backend-token")
+})

@@ -31,6 +31,7 @@ const allowedDocs = new Set([
   "docs/reference/configuration.md",
   "docs/reference/dependencies-and-third-party.md",
   "docs/reference/public-surface-policy.md",
+  "docs/reference/mcp-distribution-contract.md",
   "docs/reference/universal-api.md",
   "docs/reference/release-supply-chain-policy.md",
   "docs/reference/run-evidence-example.md",

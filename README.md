@@ -22,8 +22,10 @@ Quick paths:
 - [ProofTrail for AI Agents](docs/how-to/prooftrail-for-ai-agents.md)
 - [ProofTrail for Coding Agents and Agent Ecosystems](docs/how-to/prooftrail-for-coding-agents.md)
 - [API Builder Quickstart](docs/how-to/api-builder-quickstart.md)
+- [MCP Distribution Contract](docs/reference/mcp-distribution-contract.md)
 - [Distribution Status](DISTRIBUTION.md)
 - [Integration Boundaries](INTEGRATIONS.md)
+- [ProofTrail MCP Skill](skills/prooftrail-mcp/SKILL.md)
 
 ![ProofTrail proof loop hero](assets/storefront/prooftrail-readme-hero.svg)
 
@@ -82,6 +84,22 @@ That sequence helps you separate:
 
 The checked-in client under `apps/web/src/api-gen/` is a **repo-local
 generated helper**, not a published SDK package.
+
+## MCP Install Surfaces
+
+Use these two layers to avoid overclaiming what is available today.
+
+- **Current / usable today**:
+  local checkout + stdio through `pnpm mcp:start`, with optional
+  `UIQ_MCP_API_BASE_URL` / `UIQ_MCP_AUTOMATION_TOKEN` when you want the MCP
+  process to call a live backend.
+- **Publish-ready but not yet published**:
+  `@prooftrail/mcp-server`, the ProofTrail MCP install skill, and the
+  dedicated MCP Docker image contract described in
+  [docs/reference/mcp-distribution-contract.md](docs/reference/mcp-distribution-contract.md).
+
+Those future-facing names are part of the public contract now, but they are
+**not** live install paths until the package/image is actually published.
 
 If you are evaluating this repo for **Codex**, **Claude Code**,
 **OpenHands**, **OpenCode**, **OpenClaw**, or similar coding-agent workflows,

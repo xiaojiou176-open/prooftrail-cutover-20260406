@@ -8,10 +8,16 @@ Use
 [docs/reference/generated/ci-governance-topology.md](reference/generated/ci-governance-topology.md)
 when you need the rendered CI and governance topology instead of the storefront
 narrative.
+Use
+[docs/reference/mcp-distribution-contract.md](reference/mcp-distribution-contract.md)
+when you need the machine-facing MCP package/install contract instead of the
+storefront narrative.
 Use [../DISTRIBUTION.md](../DISTRIBUTION.md) when you need the current
 distribution and publication truth.
 Use [../INTEGRATIONS.md](../INTEGRATIONS.md) when you need the current
 integration boundary and "not an official plugin" truth.
+Use [../skills/prooftrail-mcp/SKILL.md](../skills/prooftrail-mcp/SKILL.md)
+when you need the repo-owned generic install skill for agent shells.
 Use [docs/archive/README.md](archive/README.md) to understand what stays
 outside the live public route.
 Use [docs/assets/README.md](assets/README.md) when you need the reviewable
