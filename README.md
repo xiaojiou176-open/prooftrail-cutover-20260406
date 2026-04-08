@@ -2,18 +2,27 @@
 
 Evidence-first browser automation with recovery and MCP.
 
-For AI agents and human operators who need inspectable runs, retained
-evidence, and guided recovery.
+For AI agents and human operators who need inspectable runs, retained evidence,
+and guided recovery.
 
-ProofTrail is an auditable browser automation platform for teams that need
-browser execution to stay inspectable, replayable, and recoverable.
+> ProofTrail is the browser-evidence and recovery layer, not a generic browser
+> bot and not a hosted agent shell.
 
 Current public distribution and ecosystem boundaries:
 [DISTRIBUTION.md](DISTRIBUTION.md) | [INTEGRATIONS.md](INTEGRATIONS.md)
 
-It also fits teams using Codex, Claude Code, OpenHands, OpenCode, OpenClaw, or
-other agent shells that need a browser-evidence layer through API and governed
-MCP, not a generic browser bot.
+## 30-Second Version
+
+If you only want the shortest truthful product line, use this:
+
+- run one canonical browser workflow
+- keep one retained evidence bundle
+- recover before guesswork
+- expose the same governed surface through API and MCP
+
+That is why this repo fits Codex, Claude Code, OpenHands, OpenCode, OpenClaw,
+and similar agent shells that need a browser-evidence layer instead of another
+prompt-only browser bot.
 
 Quick paths:
 
@@ -27,7 +36,10 @@ Quick paths:
 - [Integration Boundaries](INTEGRATIONS.md)
 - [ProofTrail MCP Skill](skills/prooftrail-mcp/SKILL.md)
 
-![ProofTrail proof loop hero](assets/storefront/prooftrail-readme-hero.svg)
+![ProofTrail storefront loop](assets/storefront/prooftrail-storefront-loop.gif)
+
+The static storefront hero source still lives at
+`assets/storefront/prooftrail-readme-hero.svg`.
 
 The storefront command-center screenshot artifact lives at
 `assets/storefront/prooftrail-hero.png`.
@@ -37,10 +49,7 @@ The storefront command-center screenshot artifact lives at
 
 ## Category Fit
 
-ProofTrail is not a generic browser bot and it is not a hosted AI agent
-platform.
-
-It is an evidence-first browser automation product:
+ProofTrail is an evidence-first browser automation product:
 
 - run one canonical workflow
 - inspect one retained evidence bundle

@@ -9,12 +9,22 @@ next layer of proof, operating detail, and governance boundaries.
 > The pages below help you evaluate that story from first run to side-road
 > integrations without pretending the repo is a generic AI bot platform.
 
+If you only need a fast route instead of the full map, choose one lane:
+
+- first run and retained proof
+  - [docs/getting-started/human-first-10-min.md](getting-started/human-first-10-min.md)
+- coding-agent or MCP fit
+  - [docs/how-to/prooftrail-for-coding-agents.md](how-to/prooftrail-for-coding-agents.md)
+- builder/API integration
+  - [docs/how-to/api-builder-quickstart.md](how-to/api-builder-quickstart.md)
+
 If you arrived here because you are evaluating a browser-evidence layer for
 Codex, Claude Code, OpenHands, OpenCode, OpenClaw, or another AI-agent shell,
 use the growth matrix and builder entry together. That is the truthful
 discovery route in this repo.
 
 ![ProofTrail proof loop](../assets/storefront/prooftrail-readme-hero.svg)
+![ProofTrail storefront loop](../assets/storefront/prooftrail-storefront-loop.gif)
 
 The first-run UI lane stays intentionally strict:
 `Quick Launch -> Task Center -> Recovery Center -> Flow Workshop`.

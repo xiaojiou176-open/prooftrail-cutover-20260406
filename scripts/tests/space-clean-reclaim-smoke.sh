@@ -51,7 +51,7 @@ assert set(candidates) == {
     "mcp-server-node-modules",
 }
 assert candidates["root-venv"]["apply_allowed"] is True
-assert candidates["repo-pnpm-store"]["path"] == str(home_root / ".cache/pnpm/prooftrail")
+assert candidates["repo-pnpm-store"]["path"] == str(home_root / ".cache/pnpm/prooftrail/store")
 assert (repo_root / ".venv").exists()
 assert (repo_root / "apps/automation-runner/node_modules").exists()
 assert (repo_root / "apps/mcp-server/node_modules").exists()

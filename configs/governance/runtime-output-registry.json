@@ -242,7 +242,7 @@
     },
     {
       "id": "repo-pnpm-store",
-      "path": "${HOME}/.cache/pnpm/prooftrail/virtual-store",
+      "path": "${HOME}/.cache/pnpm/prooftrail/store",
       "kind": "repo-exclusive-dependency-store",
       "owner": "scripts/space-clean-reclaim.py",
       "cleanupClass": "reclaim",
