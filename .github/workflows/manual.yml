@@ -1,4 +1,4 @@
-name: Weekly Gate
+name: Manual Gate
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: weekly-gate-${{ github.workflow }}-${{ github.ref }}
+  group: manual-gate-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
           image_ref="$(bash scripts/ci/build-ci-image.sh --push | tail -n 1)"
           echo "image_ref=${image_ref}" >> "$GITHUB_OUTPUT"
 
-  weekly-trend-signals:
+  manual-trend-signals:
     needs: build_ci_image
     runs-on: ubuntu-latest
     steps:
@@ -79,7 +79,7 @@ jobs:
         id: mcp_parity_trend
         continue-on-error: true
         run: node --import tsx --test apps/mcp-server/tests/mcp-command-parity.test.ts apps/mcp-server/tests/mcp-perfect-mode.test.ts
-      - name: Aggregate weekly pre-run non-blocking trend signals
+      - name: Aggregate manual pre-run non-blocking trend signals
         if: ${{ always() }}
         env:
           ENV_GOVERNANCE_RESULT: ${{ steps.env_governance_trend.outcome }}
@@ -93,14 +93,14 @@ jobs:
             local result="$2"
             case "$result" in
               success|skipped)
-                echo "[weekly-trend] ${name}: ${result}"
+                echo "[manual-trend] ${name}: ${result}"
                 ;;
               failure)
-                echo "::warning::[weekly-trend] ${name} failed (non-blocking)"
+                echo "::warning::[manual-trend] ${name} failed (non-blocking)"
                 warn_count=$((warn_count + 1))
                 ;;
               *)
-                echo "::error::[weekly-trend] ${name} returned unexpected result: ${result}"
+                echo "::error::[manual-trend] ${name} returned unexpected result: ${result}"
                 exit 1
                 ;;
             esac
@@ -108,25 +108,25 @@ jobs:
           check_signal "env-governance" "${ENV_GOVERNANCE_RESULT}"
           check_signal "script-syntax" "${SCRIPT_SYNTAX_RESULT}"
           check_signal "mcp-parity" "${MCP_PARITY_RESULT}"
-          echo "[weekly-trend] pre-run non-blocking warning count=${warn_count}"
+          echo "[manual-trend] pre-run non-blocking warning count=${warn_count}"
 
-  weekly-core-run:
+  manual-core-run:
     needs: build_ci_image
     runs-on: ubuntu-latest
     environment: owner-approved-sensitive
     steps:
       - uses: ./.github/actions/repo-checkout
-      - name: Weekly core run (Linux/Web required, containerized)
+      - name: Manual core run (Linux/Web required, containerized)
         env:
           UIQ_CI_IMAGE_REF: ${{ needs.build_ci_image.outputs.image_ref }}
           UIQ_ORCHESTRATOR_PARALLEL: "1"
           UIQ_ORCHESTRATOR_MAX_PARALLEL_TASKS: "6"
           UIQ_ENABLE_REAL_BACKEND_TESTS: "true"
-        run: bash scripts/ci/run-in-container.sh --task weekly-core-run --gate weekly-core-run
+        run: bash scripts/ci/run-in-container.sh --task manual-core-run --gate manual-core-run
 
-  weekly-trend-post-run:
+  manual-trend-post-run:
     runs-on: ubuntu-latest
-    needs: [build_ci_image, weekly-core-run]
+    needs: [build_ci_image, manual-core-run]
     environment: owner-approved-sensitive
     steps:
       - uses: ./.github/actions/repo-checkout
@@ -135,25 +135,25 @@ jobs:
           enable-python: "false"
           enable-playwright: "false"
           node-version: "20"
-      - name: Enforce live API key and external base URL contract (weekly trend required)
+      - name: Enforce live API key and external base URL contract (manual trend required)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || '' }}
           UIQ_BASE_URL: ${{ vars.UIQ_BASE_URL || secrets.UIQ_BASE_URL || vars.BASE_URL || secrets.BASE_URL || '' }}
         run: |
           set -euo pipefail
           if [[ -z "${GEMINI_API_KEY}" ]]; then
-            echo "::error::missing GEMINI_API_KEY/GOOGLE_API_KEY for weekly trend live gates"
+            echo "::error::missing GEMINI_API_KEY/GOOGLE_API_KEY for manual trend live gates"
             exit 1
           fi
           if [[ -z "${UIQ_BASE_URL}" ]]; then
-            echo "::error::missing UIQ_BASE_URL/BASE_URL for weekly trend live gates"
+            echo "::error::missing UIQ_BASE_URL/BASE_URL for manual trend live gates"
             exit 1
           fi
-      - name: Gemini accuracy gate (weekly trend, non-blocking)
+      - name: Gemini accuracy gate (manual trend, non-blocking)
         id: gemini_accuracy_trend
         continue-on-error: true
-        run: node scripts/ci/uiq-gemini-accuracy-gate.mjs --profile weekly --strict true
-      - name: Gemini live API smoke gate (weekly trend, non-blocking)
+        run: node scripts/ci/uiq-gemini-accuracy-gate.mjs --profile manual --strict true
+      - name: Gemini live API smoke gate (manual trend, non-blocking)
         id: gemini_live_smoke_trend
         continue-on-error: true
         env:
@@ -162,24 +162,24 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY || '' }}
           UIQ_BASE_URL: ${{ vars.UIQ_BASE_URL || secrets.UIQ_BASE_URL || vars.BASE_URL || secrets.BASE_URL || '' }}
         run: node scripts/ci/uiq-gemini-live-smoke-gate.mjs --strict true
-      - name: Gemini concurrency gate (weekly trend, non-blocking)
+      - name: Gemini concurrency gate (manual trend, non-blocking)
         id: gemini_concurrency_trend
         continue-on-error: true
-        run: node scripts/ci/uiq-gemini-concurrency-gate.mjs --profile weekly --strict true
-      - name: AI review (weekly trend, non-blocking)
+        run: node scripts/ci/uiq-gemini-concurrency-gate.mjs --profile manual --strict true
+      - name: AI review (manual trend, non-blocking)
         id: ai_review_trend
         continue-on-error: true
-        run: node --import tsx scripts/ci/uiq-ai-review.mjs --profile weekly --strict true --severity-threshold high --max-artifacts 40 --emit-issue false --emit-pr-comment false
+        run: node --import tsx scripts/ci/uiq-ai-review.mjs --profile manual --strict true --severity-threshold high --max-artifacts 40 --emit-issue false --emit-pr-comment false
       - name: Upload AI review artifacts (always)
         if: ${{ always() }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: uiq-weekly-ai-review
+          name: uiq-manual-ai-review
           path: |
-            .runtime-cache/artifacts/ci/uiq-ai-review-weekly.json
-            .runtime-cache/artifacts/ci/uiq-ai-review-weekly.md
+            .runtime-cache/artifacts/ci/uiq-ai-review-manual.json
+            .runtime-cache/artifacts/ci/uiq-ai-review-manual.md
           if-no-files-found: warn
-      - name: Aggregate weekly post-run non-blocking trend signals
+      - name: Aggregate manual post-run non-blocking trend signals
         if: ${{ always() }}
         env:
           GEMINI_ACCURACY_RESULT: ${{ steps.gemini_accuracy_trend.outcome }}
@@ -194,14 +194,14 @@ jobs:
             local result="$2"
             case "$result" in
               success|skipped)
-                echo "[weekly-trend] ${name}: ${result}"
+                echo "[manual-trend] ${name}: ${result}"
                 ;;
               failure)
-                echo "::warning::[weekly-trend] ${name} failed (non-blocking)"
+                echo "::warning::[manual-trend] ${name} failed (non-blocking)"
                 warn_count=$((warn_count + 1))
                 ;;
               *)
-                echo "::error::[weekly-trend] ${name} returned unexpected result: ${result}"
+                echo "::error::[manual-trend] ${name} returned unexpected result: ${result}"
                 exit 1
                 ;;
             esac
@@ -210,10 +210,10 @@ jobs:
           check_signal "gemini-live-smoke" "${GEMINI_LIVE_SMOKE_RESULT}"
           check_signal "gemini-concurrency" "${GEMINI_CONCURRENCY_RESULT}"
           check_signal "ai-review" "${AI_REVIEW_RESULT}"
-          echo "[weekly-trend] post-run non-blocking warning count=${warn_count}"
+          echo "[manual-trend] post-run non-blocking warning count=${warn_count}"
 
-  weekly-hard-gates:
-    needs: [build_ci_image, weekly-core-run]
+  manual-hard-gates:
+    needs: [build_ci_image, manual-core-run]
     runs-on: ubuntu-24.04
     steps:
       - uses: ./.github/actions/repo-checkout
@@ -222,11 +222,11 @@ jobs:
           enable-python: "false"
           enable-playwright: "false"
           node-version: "20"
-      - name: Flake budget gate (strict for weekly)
-        run: node scripts/ci/uiq-flake-budget.mjs --profile weekly --strict true --dynamic-baseline false
-      - name: SLA + failure cluster summary (weekly)
-        run: node scripts/ci/uiq-sla-and-clusters.mjs --profile weekly
-      - name: Failure ticketing clusters (weekly)
+      - name: Flake budget gate (strict for manual)
+        run: node scripts/ci/uiq-flake-budget.mjs --profile manual --strict true --dynamic-baseline false
+      - name: SLA + failure cluster summary (manual)
+        run: node scripts/ci/uiq-sla-and-clusters.mjs --profile manual
+      - name: Failure ticketing clusters (manual)
         env:
           UIQ_AUTO_TICKETING: ${{ env.UIQ_AUTO_TICKETING || vars.UIQ_AUTO_TICKETING || 'false' }}
           GH_TOKEN: ${{ github.token }}
@@ -240,20 +240,20 @@ jobs:
             --emit-gh-issues "$EMIT" \
             --emit-pr-comment false \
             --repo "${GITHUB_REPOSITORY}"
-      - name: Cross-target benchmark report (weekly)
-        run: node scripts/ci/uiq-cross-target-benchmark.mjs --runs-dir .runtime-cache/artifacts/runs --out-dir .runtime-cache/artifacts/ci --profile weekly --lookback-days 30 --limit 200 --targets web,tauri,swift
-      - name: Aggregate pre-commit strict metrics (weekly)
+      - name: Cross-target benchmark report (manual)
+        run: node scripts/ci/uiq-cross-target-benchmark.mjs --runs-dir .runtime-cache/artifacts/runs --out-dir .runtime-cache/artifacts/ci --profile manual --lookback-days 30 --limit 200 --targets web,tauri,swift
+      - name: Aggregate pre-commit strict metrics (manual)
         run: node scripts/ci/precommit-strict-metrics-aggregate.mjs
-      - name: Aggregate governance trend report (weekly)
+      - name: Aggregate governance trend report (manual)
         run: node scripts/ci/governance-trend-report.mjs
-      - name: Upload pre-commit strict weekly summary artifact
+      - name: Upload pre-commit strict manual summary artifact
         if: ${{ always() }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: precommit-strict-weekly-summary
+          name: precommit-strict-manual-summary
           path: |
-            .runtime-cache/artifacts/ci/precommit-strict-weekly-summary.json
-            .runtime-cache/artifacts/ci/precommit-strict-weekly-summary.md
+            .runtime-cache/artifacts/ci/precommit-strict-manual-summary.json
+            .runtime-cache/artifacts/ci/precommit-strict-manual-summary.md
           retention-days: 7
           if-no-files-found: error
       - name: Upload governance trend report artifact
@@ -267,9 +267,9 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-  weekly-release-notes:
+  manual-release-notes:
     runs-on: ubuntu-latest
-    needs: weekly-core-run
+    needs: manual-core-run
     steps:
       - uses: ./.github/actions/repo-checkout
       - name: Generate Release Notes (non-blocking)
@@ -283,19 +283,19 @@ jobs:
           name: release-notes-vnext
           path: .runtime-cache/artifacts/release/release-notes-vnext.md
 
-  weekly-upload-artifacts:
+  manual-upload-artifacts:
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs:
-      - weekly-core-run
-      - weekly-hard-gates
-      - weekly-trend-post-run
+      - manual-core-run
+      - manual-hard-gates
+      - manual-trend-post-run
     steps:
       - uses: ./.github/actions/repo-checkout
       - name: Upload Artifacts
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: uiq-weekly-run
+          name: uiq-manual-run
           path: |
             .runtime-cache/artifacts/runs/
             .runtime-cache/artifacts/ci/
@@ -311,7 +311,7 @@ jobs:
       UIQ_TAURI_APP_PATH: ${{ vars.UIQ_TAURI_APP_PATH || secrets.UIQ_TAURI_APP_PATH || '' }}
       UIQ_SWIFT_BUNDLE_ID: ${{ vars.UIQ_SWIFT_BUNDLE_ID || secrets.UIQ_SWIFT_BUNDLE_ID || '' }}
       UIQ_DESKTOP_AUTOMATION_MODE: operator-manual
-      UIQ_DESKTOP_AUTOMATION_REASON: github-workflow-weekly-desktop-regression
+      UIQ_DESKTOP_AUTOMATION_REASON: github-workflow-manual-desktop-regression
     steps:
       - uses: ./.github/actions/repo-checkout
       - uses: ./.github/actions/setup-deps
@@ -353,30 +353,30 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: uiq-weekly-desktop-regression
+          name: uiq-manual-desktop-regression
           path: |
             .runtime-cache/artifacts/runs/
 
-  weekly-summary-gate:
+  manual-summary-gate:
     runs-on: ubuntu-latest
     if: ${{ always() }}
     needs:
-      - weekly-trend-signals
-      - weekly-core-run
-      - weekly-trend-post-run
-      - weekly-hard-gates
-      - weekly-release-notes
-      - weekly-upload-artifacts
+      - manual-trend-signals
+      - manual-core-run
+      - manual-trend-post-run
+      - manual-hard-gates
+      - manual-release-notes
+      - manual-upload-artifacts
       - desktop-regression-macos
     steps:
-      - name: Aggregate weekly job graph hard gates
+      - name: Aggregate manual job graph hard gates
         env:
-          WEEKLY_TREND_SIGNALS_RESULT: ${{ needs.weekly-trend-signals.result }}
-          WEEKLY_CORE_RUN_RESULT: ${{ needs.weekly-core-run.result }}
-          WEEKLY_TREND_POST_RUN_RESULT: ${{ needs.weekly-trend-post-run.result }}
-          WEEKLY_HARD_GATES_RESULT: ${{ needs.weekly-hard-gates.result }}
-          WEEKLY_RELEASE_NOTES_RESULT: ${{ needs.weekly-release-notes.result }}
-          WEEKLY_UPLOAD_ARTIFACTS_RESULT: ${{ needs.weekly-upload-artifacts.result }}
+          WEEKLY_TREND_SIGNALS_RESULT: ${{ needs.manual-trend-signals.result }}
+          WEEKLY_CORE_RUN_RESULT: ${{ needs.manual-core-run.result }}
+          WEEKLY_TREND_POST_RUN_RESULT: ${{ needs.manual-trend-post-run.result }}
+          WEEKLY_HARD_GATES_RESULT: ${{ needs.manual-hard-gates.result }}
+          WEEKLY_RELEASE_NOTES_RESULT: ${{ needs.manual-release-notes.result }}
+          WEEKLY_UPLOAD_ARTIFACTS_RESULT: ${{ needs.manual-upload-artifacts.result }}
           DESKTOP_REGRESSION_MACOS_RESULT: ${{ needs.desktop-regression-macos.result }}
           DESKTOP_REGRESSION_REQUIRED: ${{ vars.UIQ_ENABLE_DESKTOP_REGRESSION || 'false' }}
         run: |
@@ -389,10 +389,10 @@ jobs:
             local result="$2"
             case "$result" in
               success)
-                echo "[weekly-summary] hard gate ${name}: ${result}"
+                echo "[manual-summary] hard gate ${name}: ${result}"
                 ;;
               *)
-                echo "::error::[weekly-summary] hard gate ${name} is ${result}"
+                echo "::error::[manual-summary] hard gate ${name} is ${result}"
                 hard_fail=1
                 ;;
             esac
@@ -403,14 +403,14 @@ jobs:
             local result="$2"
             case "$result" in
               success|skipped)
-                echo "[weekly-summary] non-blocking ${name}: ${result}"
+                echo "[manual-summary] non-blocking ${name}: ${result}"
                 ;;
               failure|cancelled)
-                echo "::warning::[weekly-summary] non-blocking ${name}: ${result}"
+                echo "::warning::[manual-summary] non-blocking ${name}: ${result}"
                 warn_count=$((warn_count + 1))
                 ;;
               *)
-                echo "::error::[weekly-summary] non-blocking ${name} returned unexpected result: ${result}"
+                echo "::error::[manual-summary] non-blocking ${name} returned unexpected result: ${result}"
                 hard_fail=1
                 ;;
             esac
@@ -425,17 +425,17 @@ jobs:
             fi
           }
 
-          check_hard_gate "weekly-core-run" "${WEEKLY_CORE_RUN_RESULT}"
-          check_hard_gate "weekly-hard-gates" "${WEEKLY_HARD_GATES_RESULT}"
-          check_hard_gate "weekly-upload-artifacts" "${WEEKLY_UPLOAD_ARTIFACTS_RESULT}"
+          check_hard_gate "manual-core-run" "${WEEKLY_CORE_RUN_RESULT}"
+          check_hard_gate "manual-hard-gates" "${WEEKLY_HARD_GATES_RESULT}"
+          check_hard_gate "manual-upload-artifacts" "${WEEKLY_UPLOAD_ARTIFACTS_RESULT}"
           check_desktop_gate "${DESKTOP_REGRESSION_MACOS_RESULT}"
 
-          check_trend_or_optional "weekly-trend-signals" "${WEEKLY_TREND_SIGNALS_RESULT}"
-          check_trend_or_optional "weekly-trend-post-run" "${WEEKLY_TREND_POST_RUN_RESULT}"
-          check_trend_or_optional "weekly-release-notes" "${WEEKLY_RELEASE_NOTES_RESULT}"
+          check_trend_or_optional "manual-trend-signals" "${WEEKLY_TREND_SIGNALS_RESULT}"
+          check_trend_or_optional "manual-trend-post-run" "${WEEKLY_TREND_POST_RUN_RESULT}"
+          check_trend_or_optional "manual-release-notes" "${WEEKLY_RELEASE_NOTES_RESULT}"
 
-          echo "[weekly-summary] non-blocking warning count=${warn_count}"
+          echo "[manual-summary] non-blocking warning count=${warn_count}"
           if [[ "$hard_fail" -ne 0 ]]; then
-            echo "::error::Weekly hard gates failed in job graph"
+            echo "::error::Manual hard gates failed in job graph"
             exit 1
           fi

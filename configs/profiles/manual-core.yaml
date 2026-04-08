@@ -1,4 +1,4 @@
-name: weekly-core
+name: manual-core
 steps:
   - unit
   - ct

@@ -165,7 +165,7 @@ function printHelp(): void {
   console.log("Examples:")
   console.log("  pnpm uiq run --profile pr --target web.local")
   console.log("  pnpm uiq capture --target web.local")
-  console.log("  pnpm uiq load --profile weekly --target web.local")
+  console.log("  pnpm uiq load --profile manual --target web.local")
   console.log(
     "  pnpm uiq desktop-business --profile tauri.regression --target tauri.macos --app /abs/path/MyApp.app"
   )
@@ -730,7 +730,7 @@ async function main(): Promise<void> {
 
   if (args.command === "load") {
     validateRunOverrides(args)
-    const profile = loadProfileConfig(args.profile ?? "weekly")
+    const profile = loadProfileConfig(args.profile ?? "manual")
     const target = loadTargetConfig(args.target ?? "web.local")
     const effectiveBaseUrl = args.baseUrl ?? target.baseUrl
     if (!effectiveBaseUrl) {
@@ -753,7 +753,7 @@ async function main(): Promise<void> {
   }
 
   if (args.command === "security") {
-    const profile = loadProfileConfig(args.profile ?? "weekly")
+    const profile = loadProfileConfig(args.profile ?? "manual")
     const target = loadTargetConfig(args.target ?? "web.local")
     const result = runSecurity(baseDir, resolveSecurityConfig(target, profile))
     console.log(`runId=${runId}`)

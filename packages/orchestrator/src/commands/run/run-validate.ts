@@ -43,7 +43,7 @@ import type { ProfileConfig, TargetConfig } from "./run-types.js"
 const FALLBACK_PROFILE_NAMES = [
   "pr",
   "nightly",
-  "weekly",
+  "manual",
   "tauri.smoke",
   "swift.smoke",
   "tauri.soak",
@@ -53,7 +53,9 @@ const FALLBACK_PROFILE_NAMES = [
 ]
 
 function parseListFromEnv(raw: string | undefined): string[] | null {
-  if (!raw || raw.trim().length === 0) return null
+  if (!raw || raw.trim().length === 0) {
+    return null
+  }
   try {
     const parsed = JSON.parse(raw) as unknown
     if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
@@ -116,28 +118,36 @@ function assertNoUnknownKeys(
 }
 
 function assertNumberInRange(value: unknown, label: string, min: number, max: number): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (typeof value !== "number" || Number.isNaN(value) || value < min || value > max) {
     throw new Error(`Invalid ${label}: expected number in [${min}, ${max}]`)
   }
 }
 
 function assertIntegerInRange(value: unknown, label: string, min: number, max: number): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) {
     throw new Error(`Invalid ${label}: expected integer in [${min}, ${max}]`)
   }
 }
 
 function assertStringArray(value: unknown, label: string): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
     throw new Error(`Invalid ${label}: expected string[]`)
   }
 }
 
 function assertBoolean(value: unknown, label: string): void {
-  if (value === undefined) return
+  if (value === undefined) {
+    return
+  }
   if (typeof value !== "boolean") {
     throw new Error(`Invalid ${label}: expected boolean`)
   }

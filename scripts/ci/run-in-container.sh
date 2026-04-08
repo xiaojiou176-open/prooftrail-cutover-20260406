@@ -52,7 +52,7 @@ readonly SUPPORTED_TASKS=(
   nightly-integration-full
   nightly-core-run
   nightly-hard-gates
-  weekly-core-run
+  manual-core-run
   release-docs-gate
   release-typecheck
   release-candidate-gate
@@ -922,18 +922,18 @@ EOF
 )"
     echo "[container-gate] passed: nightly hard gates executed in container"
     ;;
-  weekly-core-run)
+  manual-core-run)
     run_script_in_container "$(cat <<'EOF'
 pnpm install --frozen-lockfile >/dev/null 2>&1
 command -v k6 >/dev/null 2>&1
 command -v semgrep >/dev/null 2>&1
-pnpm uiq engines:check --profile weekly-core
+pnpm uiq engines:check --profile manual-core
 UIQ_ENABLE_REAL_BACKEND_TESTS=true pnpm test:mcp-server:real
-UIQ_ORCHESTRATOR_PARALLEL=1 UIQ_ORCHESTRATOR_MAX_PARALLEL_TASKS=6 pnpm uiq run --profile weekly-core --target web.ci
-node scripts/ci/verify-run-evidence.mjs --profile weekly-core
+UIQ_ORCHESTRATOR_PARALLEL=1 UIQ_ORCHESTRATOR_MAX_PARALLEL_TASKS=6 pnpm uiq run --profile manual-core --target web.ci
+node scripts/ci/verify-run-evidence.mjs --profile manual-core
 EOF
 )"
-    echo "[container-gate] passed: weekly core run executed in container"
+    echo "[container-gate] passed: manual core run executed in container"
     ;;
   release-docs-gate)
     run_task_in_container "pnpm install --frozen-lockfile >/dev/null 2>&1 && bash scripts/docs-gate.sh"

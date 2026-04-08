@@ -6,7 +6,7 @@ cd "$ROOT_DIR"
 
 RUN_ID_BASE="${RUN_ID_BASE:-${1:-matrix-$(date +%Y%m%d%H%M%S)-$$}}"
 NIGHTLY_RUN_ID="${RUN_ID_BASE}-nightly"
-WEEKLY_RUN_ID="${RUN_ID_BASE}-weekly"
+MANUAL_RUN_ID="${RUN_ID_BASE}-manual"
 DESKTOP_RUN_ID_PREFIX="${RUN_ID_BASE}-desktop"
 SEEN_RUN_IDS=""
 
@@ -28,11 +28,11 @@ ensure_unique_run_id() {
 }
 
 ensure_unique_run_id "$NIGHTLY_RUN_ID"
-ensure_unique_run_id "$WEEKLY_RUN_ID"
+ensure_unique_run_id "$MANUAL_RUN_ID"
 
 echo "matrix.run_id_base=${RUN_ID_BASE}"
 echo "nightly.run_id=${NIGHTLY_RUN_ID}"
-echo "weekly.run_id=${WEEKLY_RUN_ID}"
+echo "manual.run_id=${MANUAL_RUN_ID}"
 echo "desktop.run_id_prefix=${DESKTOP_RUN_ID_PREFIX}"
 
 pids=()
@@ -46,11 +46,11 @@ pids+=("$!")
 names+=("nightly")
 
 (
-  echo "[weekly] start"
-  pnpm uiq run --profile weekly --target web.ci --run-id "$WEEKLY_RUN_ID"
+  echo "[manual] start"
+  pnpm uiq run --profile manual --target web.ci --run-id "$MANUAL_RUN_ID"
 ) &
 pids+=("$!")
-names+=("weekly")
+names+=("manual")
 
 (
   echo "[desktop] start"
@@ -76,4 +76,4 @@ fi
 
 echo "matrix complete"
 echo "nightly_manifest=.runtime-cache/artifacts/runs/${NIGHTLY_RUN_ID}/manifest.json"
-echo "weekly_manifest=.runtime-cache/artifacts/runs/${WEEKLY_RUN_ID}/manifest.json"
+echo "weekly_manifest=.runtime-cache/artifacts/runs/${MANUAL_RUN_ID}/manifest.json"
