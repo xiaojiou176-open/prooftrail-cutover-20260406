@@ -27,7 +27,8 @@ Quick paths:
 
 ![ProofTrail proof loop hero](assets/storefront/prooftrail-readme-hero.svg)
 
-![ProofTrail command center showing the canonical run path, evidence-focused navigation, and operator parameter rail](assets/storefront/prooftrail-hero.png)
+The storefront command-center screenshot artifact lives at
+`assets/storefront/prooftrail-hero.png`.
 
 > ProofTrail is for AI agents and human operators who need browser automation
 > to stay inspectable, replayable, and recoverable after the first run.
@@ -148,7 +149,8 @@ board:
 - **Codex**, **OpenHands**, and **OpenClaw** usually start API-first or hybrid
 - **ProofTrail** stays the browser-evidence and recovery layer in all cases
 
-![ProofTrail ecosystem fit map](assets/storefront/prooftrail-agent-ecosystem-map.svg)
+The ecosystem-fit visual source lives at
+`assets/storefront/prooftrail-agent-ecosystem-map.svg`.
 
 ## Explore the Product Surface
 
