@@ -4,8 +4,14 @@ This directory is the one public doc surface that supports the README storefront
 
 Use [docs/index.md](index.md) as the public docs hub.
 Use [docs/architecture.md](architecture.md) as the architecture contract.
-Use [docs/reference/generated/ci-governance-topology.md](reference/generated/ci-governance-topology.md)
-when you need the rendered CI and governance topology instead of the storefront narrative.
+Use
+[docs/reference/generated/ci-governance-topology.md](reference/generated/ci-governance-topology.md)
+when you need the rendered CI and governance topology instead of the storefront
+narrative.
+Use [../DISTRIBUTION.md](../DISTRIBUTION.md) when you need the current
+distribution and publication truth.
+Use [../INTEGRATIONS.md](../INTEGRATIONS.md) when you need the current
+integration boundary and "not an official plugin" truth.
 Use [docs/archive/README.md](archive/README.md) to understand what stays
 outside the live public route.
 Use [docs/assets/README.md](assets/README.md) when you need the reviewable
@@ -79,4 +85,5 @@ For the current Wave 5 closeout and bounded-bet story, continue with:
 4. [docs/reference/final-closeout-wave5.md](reference/final-closeout-wave5.md)
 
 That sequence answers the "what actually shipped?" question without pretending
-that Wave 5 built a hosted platform, an autonomous self-heal agent, or a public marketplace.
+that Wave 5 built a hosted platform, an autonomous self-heal agent, or a
+public marketplace.

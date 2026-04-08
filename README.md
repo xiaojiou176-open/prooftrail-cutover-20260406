@@ -8,13 +8,24 @@ evidence, and guided recovery.
 ProofTrail is an auditable browser automation platform for teams that need
 browser execution to stay inspectable, replayable, and recoverable.
 
+Current public distribution and ecosystem boundaries:
+[DISTRIBUTION.md](DISTRIBUTION.md) | [INTEGRATIONS.md](INTEGRATIONS.md)
+
 It also fits teams using Codex, Claude Code, OpenHands, OpenCode, OpenClaw, or
 other agent shells that need a browser-evidence layer through API and governed
 MCP, not a generic browser bot.
 
-[Docs](docs/index.md) | [Quickstart](docs/getting-started/human-first-10-min.md) | [Minimal Success Case](docs/showcase/minimal-success-case.md) | [API Builder Quickstart](docs/how-to/api-builder-quickstart.md) | [ProofTrail for AI Agents](docs/how-to/prooftrail-for-ai-agents.md) | [ProofTrail for Coding Agents and Agent Ecosystems](docs/how-to/prooftrail-for-coding-agents.md) | [MCP for Browser Automation](docs/how-to/mcp-quickstart-1pager.md) | [AI Reconstruction](docs/how-to/ai-reconstruction-side-road.md) | [Evidence, Recovery, and Review Workspace](docs/how-to/evidence-recovery-review-workspace.md) | [Alternatives](docs/compare/prooftrail-vs-generic-browser-agents.md) | [Release Guide](docs/release/README.md)
+Quick paths:
 
-<img src="assets/storefront/prooftrail-readme-hero.svg" alt="ProofTrail canonical proof loop showing one public command, one retained evidence bundle, and one exact recovery path." />
+- [Docs](docs/index.md)
+- [Quickstart](docs/getting-started/human-first-10-min.md)
+- [ProofTrail for AI Agents](docs/how-to/prooftrail-for-ai-agents.md)
+- [ProofTrail for Coding Agents and Agent Ecosystems](docs/how-to/prooftrail-for-coding-agents.md)
+- [API Builder Quickstart](docs/how-to/api-builder-quickstart.md)
+- [Distribution Status](DISTRIBUTION.md)
+- [Integration Boundaries](INTEGRATIONS.md)
+
+![ProofTrail proof loop hero](assets/storefront/prooftrail-readme-hero.svg)
 
 ![ProofTrail command center showing the canonical run path, evidence-focused navigation, and operator parameter rail](assets/storefront/prooftrail-hero.png)
 
@@ -137,7 +148,7 @@ board:
 - **Codex**, **OpenHands**, and **OpenClaw** usually start API-first or hybrid
 - **ProofTrail** stays the browser-evidence and recovery layer in all cases
 
-<img src="assets/storefront/prooftrail-agent-ecosystem-map.svg" alt="ProofTrail ecosystem fit map showing Codex, Claude Code, OpenHands, OpenCode, and OpenClaw with API-first and MCP-first entry roads." />
+![ProofTrail ecosystem fit map](assets/storefront/prooftrail-agent-ecosystem-map.svg)
 
 ## Explore the Product Surface
 
@@ -186,11 +197,17 @@ so the public story and the integration story stay connected.
 
 Choose the shortest path that matches what you want to confirm first:
 
-| I want to... | Run this first | What I get |
-| --- | --- | --- |
-| produce one canonical run | `just setup && just run` | a new run directory under `.runtime-cache/artifacts/runs/<runId>/` with manifest and proof reports |
-| know what good evidence should look like | [docs/reference/run-evidence-example.md](docs/reference/run-evidence-example.md) | the concrete report shape you should expect from a healthy run |
-| follow the guided operator path | [docs/getting-started/human-first-10-min.md](docs/getting-started/human-first-10-min.md) | the shortest human-readable route from fresh checkout to inspectable proof |
+- If you want to produce one canonical run:
+  Start with `just setup && just run`.
+  You should get a new run directory under
+  `.runtime-cache/artifacts/runs/<runId>/` with manifest and proof reports.
+- If you want to know what good evidence should look like:
+  Start with [docs/reference/run-evidence-example.md](docs/reference/run-evidence-example.md).
+  That page shows the concrete report shape a healthy run should produce.
+- If you want to follow the guided operator path:
+  Start with [docs/getting-started/human-first-10-min.md](docs/getting-started/human-first-10-min.md).
+  That is the shortest human-readable route from fresh checkout to inspectable
+  proof.
 
 ## 15-Minute Evaluation Path
 
@@ -246,7 +263,8 @@ The canonical public mainline is:
 2. run `just run`
 3. inspect `.runtime-cache/artifacts/runs/<runId>/`
 
-`just run` is the canonical public mainline wrapper for `pnpm uiq run --profile pr --target web.local`.
+`just run` is the canonical public mainline wrapper for
+`pnpm uiq run --profile pr --target web.local`.
 
 `just run-legacy` remains available for lower-level workshop troubleshooting,
 but it is not the canonical public mainline.
@@ -279,13 +297,13 @@ Requirements:
 just setup
 ```
 
-2. Run the canonical workflow.
+1. Run the canonical workflow.
 
 ```bash
 just run
 ```
 
-3. Inspect the resulting evidence bundle.
+1. Inspect the resulting evidence bundle.
 
 ```bash
 ls .runtime-cache/artifacts/runs
@@ -300,7 +318,8 @@ What good looks like:
   `reports/proof.gaps.json`, and `reports/proof.repro.json`
 - `manifest.json` points back to those proof artifacts through both
   `manifest.proof` and `manifest.reports`
-- the same orchestrator-first chain is reachable through `pnpm uiq run --profile pr --target web.local`
+- the same orchestrator-first chain is reachable through
+  `pnpm uiq run --profile pr --target web.local`
 - even when the PR gate fails, `reports/summary.json` still tells you why
   instead of leaving you with a silent shell failure
 
@@ -341,7 +360,8 @@ Use the product surfaces in this order:
    - Ask: "Do I need help rebuilding a flow from artifacts?"
    - Use it only after artifacts already exist; it is an optional advanced helper.
 5. **MCP**
-   - Ask: "Do I need an external AI client to inspect runs or operate this repo safely?"
+   - Ask: "Do I need an external AI client to inspect runs or operate this
+     repo safely?"
    - Treat it as an integration side road, not as a replacement for `just run`.
 6. **Review Workspace**
    - Ask: "Do I need one review-ready packet before I hand this run to another maintainer?"
@@ -362,7 +382,9 @@ Use this mental model when you explain ProofTrail to a new evaluator:
 
 - **What it is**: evidence-first browser automation with recovery and MCP
 - **Who it helps**: AI agents and human operators who need trustworthy browser workflows
-- **Why it feels different**: the product does not stop at “the automation ran”; it keeps the evidence, recovery path, and handoff surfaces attached to the run
+- **Why it feels different**: the product does not stop at
+  “the automation ran”; it keeps the evidence, recovery path, and handoff
+  surfaces attached to the run
 - **Where AI fits**: AI reconstruction helps after artifacts already exist
 - **Where MCP fits**: MCP exposes the same governed surfaces to external AI clients
 
@@ -372,7 +394,8 @@ Suitable for:
 
 - teams standardizing browser automation runs across operators and environments
 - maintainers who need inspectable evidence instead of ad-hoc shell output
-- workflows where replay, diagnostics, and recovery matter as much as first-run success
+- workflows where replay, diagnostics, and recovery matter as much as
+  first-run success
 
 Not suitable for:
 
@@ -395,9 +418,13 @@ governance checks.
 
 Public collaboration contract:
 
-- external pull requests stay on GitHub-hosted, low-risk governance and build lanes
-- live, external, and owner-secret workflows are manual-only and require the protected `owner-approved-sensitive` environment
-- macOS-only smoke and regression lanes use GitHub-hosted `macos-latest`; `self-hosted` / `shared-pool` are not part of the public collaboration contract
+- external pull requests stay on GitHub-hosted, low-risk governance and build
+  lanes
+- live, external, and owner-secret workflows are manual-only and require the
+  protected `owner-approved-sensitive` environment
+- macOS-only smoke and regression lanes use GitHub-hosted `macos-latest`;
+  `self-hosted` / `shared-pool` are not part of the public collaboration
+  contract
 
 ## Maintainer Space Hygiene
 

@@ -7,6 +7,8 @@ const requiredEntrypoints = [
   { path: "docs/showcase/minimal-success-case.md", sources: ["README.md", "docs/index.md"] },
   { path: "docs/reference/run-evidence-example.md", sources: ["README.md", "docs/index.md"] },
   { path: "docs/archive/README.md", sources: ["docs/index.md", "docs/README.md"] },
+  { path: "DISTRIBUTION.md", sources: ["README.md", "docs/index.md"] },
+  { path: "INTEGRATIONS.md", sources: ["README.md", "docs/index.md"] },
 ]
 
 const failures = []
@@ -30,7 +32,9 @@ for (const entry of requiredEntrypoints) {
 
 if (failures.length > 0) {
   console.error("[doc-entrypoints] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 
