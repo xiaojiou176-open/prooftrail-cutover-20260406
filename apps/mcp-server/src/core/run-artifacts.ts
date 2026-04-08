@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs"
 import { extname } from "node:path"
+import { compareEvidenceRuns as compareSharedEvidenceRuns } from "../../../../packages/core/src/evidence-runs/diff.js"
+import { buildPromotionCandidate as buildSharedPromotionCandidate } from "../../../../packages/core/src/evidence-runs/promotion.js"
 import {
-  buildPromotionCandidate as buildSharedPromotionCandidate,
-  compareEvidenceRuns as compareSharedEvidenceRuns,
-  buildEvidenceSharePack as buildSharedEvidenceSharePack,
   listEvidenceRuns as listSharedEvidenceRuns,
   readEvidenceRunDetail as readSharedEvidenceRunDetail,
   readLatestEvidenceRun as readSharedLatestEvidenceRun,
-} from "../../../../packages/core/src/index.js"
+} from "../../../../packages/core/src/evidence-runs/read-model.js"
+import { buildEvidenceSharePack as buildSharedEvidenceSharePack } from "../../../../packages/core/src/evidence-runs/share-pack.js"
 import {
   type JsonObject,
   latestRunId,
@@ -80,7 +80,9 @@ export const DEFAULT_EVIDENCE_PATH_BY_CHECK_ID: Record<string, string> = {
 
 function fallbackEvidencePathForCheck(id: string, explicitPath?: string): string | null {
   const explicit = explicitPath?.trim()
-  if (explicit) return explicit
+  if (explicit) {
+    return explicit
+  }
   return DEFAULT_EVIDENCE_PATH_BY_CHECK_ID[id] ?? null
 }
 
@@ -154,9 +156,13 @@ function readRunJson(runId: string, rel: string): unknown {
 
 export function pickRunIdOrLatest(input?: string): string {
   const trimmed = input?.trim()
-  if (trimmed) return trimmed
+  if (trimmed) {
+    return trimmed
+  }
   const latest = latestRunId()
-  if (!latest) throw new Error("no runs found")
+  if (!latest) {
+    throw new Error("no runs found")
+  }
   return latest
 }
 
@@ -176,16 +182,23 @@ export function readLatestEvidenceRunRecord(): JsonObject {
   return readSharedLatestEvidenceRun() as unknown as JsonObject
 }
 
-export function compareEvidenceRunRecords(baselineRunId: string, candidateRunId: string): JsonObject {
+export function compareEvidenceRunRecords(
+  baselineRunId: string,
+  candidateRunId: string
+): JsonObject {
   return compareSharedEvidenceRuns(baselineRunId, candidateRunId) as unknown as JsonObject
 }
 
 export function buildEvidenceSharePackRecord(runId: string, candidateRunId?: string): JsonObject {
-  return buildSharedEvidenceSharePack(runId, { compareRunId: candidateRunId }) as unknown as JsonObject
+  return buildSharedEvidenceSharePack(runId, {
+    compareRunId: candidateRunId,
+  }) as unknown as JsonObject
 }
 
 export function buildPromotionCandidateRecord(runId: string, candidateRunId?: string): JsonObject {
-  return buildSharedPromotionCandidate(runId, { compareRunId: candidateRunId }) as unknown as JsonObject
+  return buildSharedPromotionCandidate(runId, {
+    compareRunId: candidateRunId,
+  }) as unknown as JsonObject
 }
 
 export function analyzeA11y(runId: string, topN: number): JsonObject {
@@ -271,7 +284,9 @@ export function analyzeSecurity(runId: string): JsonObject {
 
 function readJsonIfExists(runId: string, rel: string): unknown | null {
   const abs = safeResolveUnder(runsRoot(), runId, rel)
-  if (!existsSync(abs)) return null
+  if (!existsSync(abs)) {
+    return null
+  }
   return readJson(abs)
 }
 
@@ -360,7 +375,9 @@ export function comparePerf(runA: string, runB: string): JsonObject {
 export function readRepoTextFile(relativePath: string): string {
   const root = repoRoot()
   const normalized = relativePath.trim()
-  if (!normalized) throw new Error("relativePath is required")
+  if (!normalized) {
+    throw new Error("relativePath is required")
+  }
   const allowedPrefixes = [
     "README.md",
     "docs/",

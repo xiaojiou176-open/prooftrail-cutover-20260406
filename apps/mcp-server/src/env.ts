@@ -3,7 +3,7 @@ import {
   readBoolEnv,
   readEnv,
   readIntEnv,
-} from "../../../packages/core/index.js"
+} from "../../../packages/core/src/config/env.js"
 
 export const MCP_ENV = NODE_ENV
 
