@@ -13,7 +13,7 @@ Generated from `configs/governance/upstream-registry.json`. Do not edit this fil
 | `semgrep-cli` | `binary` | static-analysis | `https://pypi.org/project/semgrep/` | `1.118.0` | `@platform` | `ci-base-toolchain` | `public_contract` | `active` |
 | `curlconverter-cli` | `binary` | thirdparty-wrapper-cli | `npm:curlconverter` | `4.12.0` | `@automation` | `thirdparty-wrapper-tooling` | `wrapper_cli` | `active` |
 | `har-to-k6-cli` | `binary` | thirdparty-wrapper-cli | `npm:har-to-k6` | `0.14.10` | `@automation` | `thirdparty-wrapper-tooling` | `wrapper_cli` | `active` |
-| `playwright-cli` | `sdk` | browser-automation-runtime | `npm:playwright` | `1.58.2` | `@qa-platform` | `browser-and-load-tooling` | `sdk_surface` | `active` |
+| `playwright-cli` | `sdk` | browser-automation-runtime | `npm:playwright` | `1.59.1` | `@qa-platform` | `browser-and-load-tooling` | `sdk_surface` | `active` |
 | `mcp-sdk` | `sdk` | mcp-protocol-surface | `npm:@modelcontextprotocol/sdk` | `1.28.0` | `@platform` | `mcp-runtime` | `sdk_surface` | `active` |
 | `gemini-sdk` | `sdk` | automation-llm-runtime | `npm:@google/genai` | `1.42.0` | `@automation` | `automation-ai` | `sdk_surface` | `active` |
 | `upstream-repo-binding` | `repo` | mainline-upstream-audit | `configs/upstream/source.yaml` | `remote=upstream,branch=main` | `@platform` | `upstream-audit` | `repo_binding` | `active` |

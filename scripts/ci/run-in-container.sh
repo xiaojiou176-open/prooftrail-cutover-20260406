@@ -283,13 +283,17 @@ ensure_baseline_contract() {
     IMAGE="$(bash scripts/ci/resolve-ci-image.sh "${resolve_args[@]}")"
   fi
   case "$IMAGE" in
-    ghcr.io/*/ci:*|ghcr.io/*/ci@sha256:*|ghcr.io/local/*/ci:*|ghcr.io/local/*/ci@sha256:*) ;;
+    ghcr.io/*/ci:*|ghcr.io/*/ci@sha256:*) ;;
     *)
       echo "[container-gate] repo-owned ci image required, got: $IMAGE" >&2
       exit 1
       ;;
   esac
   if [[ "$TASK" != "contract" && "$DRY_RUN" != "true" ]] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    local prefer_local_rebuild=false
+    if [[ "$TASK" == "pr-run-profile" && ( "$IMAGE" == ghcr.io/*/ci:* || "$IMAGE" == ghcr.io/*/ci@sha256:* ) ]]; then
+      prefer_local_rebuild=true
+    fi
     if [[ "$IMAGE" == ghcr.io/* && -n "${GITHUB_TOKEN:-}" ]]; then
       local ghcr_home ghcr_config
       ghcr_home="${ROOT_DIR}/.runtime-cache/container-home/ghcr-login"
@@ -297,9 +301,17 @@ ensure_baseline_contract() {
       mkdir -p "$ghcr_config"
       printf '%s\n' '{"auths":{},"credsStore":"","credHelpers":{}}' > "${ghcr_config}/config.json"
       HOME="$ghcr_home" DOCKER_CONFIG="$ghcr_config" \
-        run_cmd bash -lc 'printf "%s" "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-github-actions[bot]}" --password-stdin'
+        run_cmd bash -lc "printf '%s' \"\$GITHUB_TOKEN\" | docker login ghcr.io -u \"\${GITHUB_ACTOR:-github-actions[bot]}\" --password-stdin"
     fi
-    if ! run_cmd docker pull "$IMAGE"; then
+    if [[ "$prefer_local_rebuild" == "true" ]]; then
+      echo "[container-gate] pr-run-profile requires a local CI image rebuild from the current runtime lock" >&2
+      local built_image_ref
+      built_image_ref="$(bash scripts/ci/build-ci-image.sh | tail -n 1)"
+      if [[ "$built_image_ref" != "$IMAGE" ]]; then
+        echo "[container-gate] local CI image fallback resolved '$built_image_ref' while gate expected '$IMAGE'" >&2
+        exit 1
+      fi
+    elif ! run_cmd docker pull "$IMAGE"; then
       if [[ "$IMAGE" == ghcr.io/*/ci:* || "$IMAGE" == ghcr.io/*/ci@sha256:* ]]; then
         echo "[container-gate] repo-owned CI image pull failed; rebuilding locally from runtime lock" >&2
         local built_image_ref
@@ -823,6 +835,7 @@ EOF
     run_script_in_container "$(cat <<'EOF'
 pnpm install --frozen-lockfile >/dev/null 2>&1
 uv sync --frozen --extra dev >/dev/null 2>&1
+pnpm exec playwright install --with-deps chromium >/dev/null 2>&1
 pnpm uiq engines:check --profile pr
 UIQ_ORCHESTRATOR_PARALLEL=1 UIQ_ORCHESTRATOR_MAX_PARALLEL_TASKS=4 pnpm uiq run --profile pr --target web.ci
 node scripts/ci/verify-run-evidence.mjs --profile pr
