@@ -20,7 +20,7 @@
     "recovery",
     "ai-agents",
     "codex",
-    "claude-code"
+    "coding-agents"
   ],
   "type": "module",
   "main": "./dist/server.cjs",
