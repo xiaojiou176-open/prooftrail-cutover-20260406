@@ -14,7 +14,9 @@ REPO_DEFAULT = "xiaojiou176-open/prooftrail"
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parents[1]
 STORE_FRONTEND_SCRIPT = ROOT_DIR / "scripts" / "github" / "check-storefront-settings.sh"
-MANUAL_EVIDENCE_DEFAULT = ROOT_DIR / ".runtime-cache" / "artifacts" / "ci" / "github-closure-manual-evidence.json"
+MANUAL_EVIDENCE_DEFAULT = (
+    ROOT_DIR / ".runtime-cache" / "artifacts" / "ci" / "github-closure-manual-evidence.json"
+)
 GITHUB_PLAN_REQUIREMENT = "GitHub Code Quality and AI findings require an organization-owned repository on GitHub Team or GitHub Enterprise Cloud."
 
 
@@ -64,7 +66,10 @@ def effective_manual_check(
     resolved_section: dict[str, Any],
 ) -> dict[str, Any]:
     effective = dict(raw_check)
-    if raw_check.get("status") == "manual_required" and resolved_section.get("status") in {"pass", "fail"}:
+    if raw_check.get("status") == "manual_required" and resolved_section.get("status") in {
+        "pass",
+        "fail",
+    }:
         effective["status"] = resolved_section["status"]
         effective["reason"] = resolved_section["reason"]
         effective["source"] = resolved_section.get("source", "manual")
@@ -109,7 +114,8 @@ def load_manual_section(name: str, payload: dict[str, Any] | None) -> dict[str, 
             }
     return {
         "status": status,
-        "reason": str(section.get("reason", "")).strip() or f"manual evidence section '{name}' provided",
+        "reason": str(section.get("reason", "")).strip()
+        or f"manual evidence section '{name}' provided",
         "checked_at": checked_at,
         "checked_by": checked_by,
         "evidence": evidence,
@@ -128,7 +134,9 @@ def resolve_owner_plan(repo_metadata: dict[str, Any], repo: str) -> dict[str, An
     if owner_type == "Organization" and owner_login:
         try:
             org_payload = run_json_command(["gh", "api", f"orgs/{owner_login}"])
-            org_plan = str((org_payload.get("plan") or {}).get("name") or "").strip().lower() or None
+            org_plan = (
+                str((org_payload.get("plan") or {}).get("name") or "").strip().lower() or None
+            )
             org_plan_status = "resolved"
         except RuntimeError as exc:
             org_plan_status = "unresolved"
@@ -208,13 +216,19 @@ def main() -> int:
     community_profile = run_json_command(["gh", "api", f"repos/{args.repo}/community/profile"])
     owner_context = resolve_owner_plan(repo_metadata, args.repo)
     code_scanning_open = int(
-        run_text_command(["gh", "api", f"repos/{args.repo}/code-scanning/alerts?state=open", "--jq", "length"])
+        run_text_command(
+            ["gh", "api", f"repos/{args.repo}/code-scanning/alerts?state=open", "--jq", "length"]
+        )
     )
     secret_scanning_open = int(
-        run_text_command(["gh", "api", f"repos/{args.repo}/secret-scanning/alerts?state=open", "--jq", "length"])
+        run_text_command(
+            ["gh", "api", f"repos/{args.repo}/secret-scanning/alerts?state=open", "--jq", "length"]
+        )
     )
     dependabot_open = int(
-        run_text_command(["gh", "api", f"repos/{args.repo}/dependabot/alerts?state=open", "--jq", "length"])
+        run_text_command(
+            ["gh", "api", f"repos/{args.repo}/dependabot/alerts?state=open", "--jq", "length"]
+        )
     )
 
     manual_path = Path(args.manual_evidence)
@@ -271,13 +285,14 @@ def main() -> int:
     elif storefront["checks"]["social_preview"]["status"] == "fail":
         social_preview = automated_section("fail", storefront["checks"]["social_preview"]["reason"])
     else:
-        social_preview = manual_required_section("social_preview", storefront["checks"]["social_preview"]["reason"])
+        social_preview = manual_required_section(
+            "social_preview", storefront["checks"]["social_preview"]["reason"]
+        )
 
     if content_reports_manual is not None:
         content_reports = content_reports_manual
-    elif (
-        storefront["checks"]["community_profile"]["status"] == "pass"
-        and bool(community_profile.get("content_reports_enabled"))
+    elif storefront["checks"]["community_profile"]["status"] == "pass" and bool(
+        community_profile.get("content_reports_enabled")
     ):
         content_reports = automated_section(
             "pass",
@@ -285,9 +300,13 @@ def main() -> int:
             health_percentage=community_profile.get("health_percentage"),
         )
     elif storefront["checks"]["community_profile"]["status"] == "fail":
-        content_reports = automated_section("fail", storefront["checks"]["community_profile"]["reason"])
+        content_reports = automated_section(
+            "fail", storefront["checks"]["community_profile"]["reason"]
+        )
     else:
-        content_reports = manual_required_section("content_reports", storefront["checks"]["community_profile"]["reason"])
+        content_reports = manual_required_section(
+            "content_reports", storefront["checks"]["community_profile"]["reason"]
+        )
 
     if (
         storefront["checks"]["social_preview"]["status"] != "fail"
@@ -302,12 +321,16 @@ def main() -> int:
     ):
         content_reports["reason"] = storefront["checks"]["community_profile"]["reason"]
 
-    effective_social_preview = effective_manual_check(storefront["checks"]["social_preview"], social_preview)
+    effective_social_preview = effective_manual_check(
+        storefront["checks"]["social_preview"], social_preview
+    )
 
     storefront_sections = [
         storefront["checks"]["description"],
         storefront["checks"]["discussions"],
+        storefront["checks"]["issues"],
         storefront["checks"]["homepage"],
+        storefront["checks"]["pages"],
         storefront["checks"]["topics"],
         storefront["checks"]["releases"],
         effective_social_preview,
@@ -373,8 +396,12 @@ def main() -> int:
             },
         },
         "observable_alternatives": {
-            "pr_quality_gate_workflow_present": (ROOT_DIR / ".github" / "workflows" / "pr.yml").exists(),
-            "uiq_gemini_uiux_audit_present": (ROOT_DIR / "scripts" / "ci" / "uiq-gemini-uiux-audit.mjs").exists(),
+            "pr_quality_gate_workflow_present": (
+                ROOT_DIR / ".github" / "workflows" / "pr.yml"
+            ).exists(),
+            "uiq_gemini_uiux_audit_present": (
+                ROOT_DIR / "scripts" / "ci" / "uiq-gemini-uiux-audit.mjs"
+            ).exists(),
         },
         "verdict": verdict,
         "status": {
