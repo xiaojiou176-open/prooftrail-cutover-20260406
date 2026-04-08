@@ -8,7 +8,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..")
 const PR_WORKFLOW = readFileSync(resolve(REPO_ROOT, ".github/workflows/pr.yml"), "utf8")
 const CI_WORKFLOW = readFileSync(resolve(REPO_ROOT, ".github/workflows/ci.yml"), "utf8")
 const NIGHTLY_WORKFLOW = readFileSync(resolve(REPO_ROOT, ".github/workflows/nightly.yml"), "utf8")
-const WEEKLY_WORKFLOW = readFileSync(resolve(REPO_ROOT, ".github/workflows/weekly.yml"), "utf8")
+const WEEKLY_WORKFLOW = readFileSync(resolve(REPO_ROOT, ".github/workflows/manual.yml"), "utf8")
 const RELEASE_WORKFLOW = readFileSync(
   resolve(REPO_ROOT, ".github/workflows/release-candidate.yml"),
   "utf8"
@@ -22,7 +22,7 @@ const UPSTREAM_DRIFT_WORKFLOW = readFileSync(
   "utf8"
 )
 const RUNTIME_GC_WORKFLOW = readFileSync(
-  resolve(REPO_ROOT, ".github/workflows/runtime-gc-weekly.yml"),
+  resolve(REPO_ROOT, ".github/workflows/runtime-gc.yml"),
   "utf8"
 )
 const DESKTOP_SMOKE_WORKFLOW = readFileSync(
@@ -85,7 +85,7 @@ test("workflow top-level permissions default to contents: read only", () => {
     ["pr", PR_WORKFLOW],
     ["ci", CI_WORKFLOW],
     ["nightly", NIGHTLY_WORKFLOW],
-    ["weekly", WEEKLY_WORKFLOW],
+    ["manual", WEEKLY_WORKFLOW],
     ["release", RELEASE_WORKFLOW],
   ]) {
     const block = getTopLevelPermissionsBlock(content)
@@ -108,7 +108,7 @@ test("build image and attestation-like jobs use job-level elevated permissions",
     ["pr", PR_WORKFLOW],
     ["ci", CI_WORKFLOW],
     ["nightly", NIGHTLY_WORKFLOW],
-    ["weekly", WEEKLY_WORKFLOW],
+    ["manual", WEEKLY_WORKFLOW],
     ["release", RELEASE_WORKFLOW],
   ]) {
     const section = getJobSection(content, "build_ci_image")
@@ -159,7 +159,7 @@ test("helper workflows consume the shared repo checkout contract", () => {
   for (const [name, content] of [
     ["pre-commit", PRECOMMIT_WORKFLOW],
     ["nightly", NIGHTLY_WORKFLOW],
-    ["weekly", WEEKLY_WORKFLOW],
+    ["manual", WEEKLY_WORKFLOW],
     ["upstream-drift", UPSTREAM_DRIFT_WORKFLOW],
     ["runtime-gc", RUNTIME_GC_WORKFLOW],
     ["desktop-smoke", DESKTOP_SMOKE_WORKFLOW],
@@ -178,7 +178,7 @@ test("public collaboration workflows no longer advertise self-hosted pool routes
     ["pr", PR_WORKFLOW],
     ["ci", CI_WORKFLOW],
     ["nightly", NIGHTLY_WORKFLOW],
-    ["weekly", WEEKLY_WORKFLOW],
+    ["manual", WEEKLY_WORKFLOW],
     ["release", RELEASE_WORKFLOW],
     ["pre-commit", PRECOMMIT_WORKFLOW],
     ["upstream-drift", UPSTREAM_DRIFT_WORKFLOW],
@@ -196,7 +196,7 @@ test("public collaboration workflows no longer advertise self-hosted pool routes
 test("manual sensitive workflows require workflow_dispatch plus protected environments", () => {
   for (const [name, content] of [
     ["nightly", NIGHTLY_WORKFLOW],
-    ["weekly", WEEKLY_WORKFLOW],
+    ["manual", WEEKLY_WORKFLOW],
     ["upstream-drift", UPSTREAM_DRIFT_WORKFLOW],
     ["desktop-smoke", DESKTOP_SMOKE_WORKFLOW],
   ]) {
@@ -214,8 +214,8 @@ test("manual sensitive workflows require workflow_dispatch plus protected enviro
     [NIGHTLY_WORKFLOW, "nightly-integration-full"],
     [NIGHTLY_WORKFLOW, "nightly-core-run"],
     [NIGHTLY_WORKFLOW, "desktop-regression-macos"],
-    [WEEKLY_WORKFLOW, "weekly-core-run"],
-    [WEEKLY_WORKFLOW, "weekly-trend-post-run"],
+    [WEEKLY_WORKFLOW, "manual-core-run"],
+    [WEEKLY_WORKFLOW, "manual-trend-post-run"],
     [WEEKLY_WORKFLOW, "desktop-regression-macos"],
   ]) {
     const section = getJobSection(workflow, jobName)
@@ -229,12 +229,12 @@ test("manual sensitive workflows require workflow_dispatch plus protected enviro
 
 test("macOS-only jobs use GitHub-hosted macOS runners", () => {
   const nightlyDesktop = getJobSection(NIGHTLY_WORKFLOW, "desktop-regression-macos")
-  const weeklyDesktop = getJobSection(WEEKLY_WORKFLOW, "desktop-regression-macos")
+  const manualDesktop = getJobSection(WEEKLY_WORKFLOW, "desktop-regression-macos")
   const smokeDesktop = getJobSection(DESKTOP_SMOKE_WORKFLOW, "desktop-smoke")
 
   for (const [name, section] of [
     ["nightly desktop regression", nightlyDesktop],
-    ["weekly desktop regression", weeklyDesktop],
+    ["manual desktop regression", manualDesktop],
     ["desktop smoke", smokeDesktop],
   ]) {
     assert.match(section, /runs-on:\s+macos-latest/, `${name} must use GitHub-hosted macOS runners`)

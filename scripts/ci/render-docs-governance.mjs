@@ -2,7 +2,11 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
-import { loadGovernanceControlPlane, renderList, renderTable } from "./lib/governance-control-plane.mjs"
+import {
+  loadGovernanceControlPlane,
+  renderList,
+  renderTable,
+} from "./lib/governance-control-plane.mjs"
 
 const repoRoot = process.cwd()
 
@@ -21,15 +25,16 @@ const OUTPUTS = {
   governanceModuleBoundaries: "docs/reference/generated/governance/module-boundaries.md",
   governanceUpstreamRegistry: "docs/reference/generated/governance/upstream-registry.md",
   governanceUpstreamCompatMatrix: "docs/reference/generated/governance/upstream-compat-matrix.md",
-  governanceUpstreamCustomizations: "docs/reference/generated/governance/upstream-customizations.md",
+  governanceUpstreamCustomizations:
+    "docs/reference/generated/governance/upstream-customizations.md",
 }
 
 const PROFILE_FILES = [
   "configs/profiles/pr.yaml",
   "configs/profiles/nightly.yaml",
   "configs/profiles/nightly-core.yaml",
-  "configs/profiles/weekly.yaml",
-  "configs/profiles/weekly-core.yaml",
+  "configs/profiles/manual.yaml",
+  "configs/profiles/manual-core.yaml",
   "configs/profiles/tauri.regression.yaml",
   "configs/profiles/swift.regression.yaml",
 ]
@@ -39,12 +44,17 @@ function readRepoFile(relativePath) {
 }
 
 function ensureParentDir(relativePath) {
-  mkdirSync(path.dirname(path.join(repoRoot, relativePath)), { recursive: true })
+  mkdirSync(path.dirname(path.join(repoRoot, relativePath)), {
+    recursive: true,
+  })
 }
 
 function normalizeScalar(rawValue) {
   const trimmed = String(rawValue).trim()
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
     return trimmed.slice(1, -1)
   }
   return trimmed
@@ -64,26 +74,34 @@ function parseTopLevelMap(relativePath) {
 
   for (const rawLine of lines) {
     const line = rawLine.replace(/\t/g, "    ")
-    if (!line.trim() || line.trim().startsWith("#")) continue
+    if (!line.trim() || line.trim().startsWith("#")) {
+      continue
+    }
     const topLevelMatch = line.match(/^([A-Za-z0-9_]+):\s*(.*)$/)
     if (topLevelMatch && !line.startsWith("  ")) {
       section = topLevelMatch[1]
       nestedSection = ""
       const value = topLevelMatch[2]
-      if (section === "name") result.name = normalizeScalar(value)
+      if (section === "name") {
+        result.name = normalizeScalar(value)
+      }
       continue
     }
-    const listMatch = line.match(/^  -\s+(.*)$/)
+    const listMatch = line.match(/^ {2}-\s+(.*)$/)
     if (listMatch && section === "steps") {
       result.steps.push(normalizeScalar(listMatch[1]))
       continue
     }
-    const nestedMatch = line.match(/^  ([A-Za-z0-9_.-]+):\s*(.*)$/)
+    const nestedMatch = line.match(/^ {2}([A-Za-z0-9_.-]+):\s*(.*)$/)
     if (nestedMatch) {
       const key = nestedMatch[1]
       const value = nestedMatch[2]
-      if (section === "gates") result.gates[key] = normalizeScalar(value)
-      if (section === "aiReview") result.aiReview[key] = normalizeScalar(value)
+      if (section === "gates") {
+        result.gates[key] = normalizeScalar(value)
+      }
+      if (section === "aiReview") {
+        result.aiReview[key] = normalizeScalar(value)
+      }
       if (section === "enginePolicy") {
         if (value === "") {
           nestedSection = key
@@ -94,9 +112,11 @@ function parseTopLevelMap(relativePath) {
       }
       continue
     }
-    const deepListMatch = line.match(/^    -\s+(.*)$/)
+    const deepListMatch = line.match(/^ {4}-\s+(.*)$/)
     if (deepListMatch && section === "enginePolicy" && nestedSection === "required") {
-      const existing = Array.isArray(result.enginePolicy.required) ? result.enginePolicy.required : []
+      const existing = Array.isArray(result.enginePolicy.required)
+        ? result.enginePolicy.required
+        : []
       existing.push(normalizeScalar(deepListMatch[1]))
       result.enginePolicy.required = existing
     }
@@ -107,7 +127,9 @@ function parseTopLevelMap(relativePath) {
 
 function extractConstArray(source, constName) {
   const escaped = constName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  const match = source.match(new RegExp(`${escaped}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s+as\\s+const;?`, "m"))
+  const match = source.match(
+    new RegExp(`${escaped}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s+as\\s+const;?`, "m")
+  )
   if (!match) {
     throw new Error(`unable to locate const array: ${constName}`)
   }
@@ -117,10 +139,14 @@ function extractConstArray(source, constName) {
 function extractToolNamesFromRegisterSource(source) {
   const names = new Set()
   for (const match of source.matchAll(/registerTool\(\s*"([^"]+)"/g)) {
-    if (match[1]?.startsWith("uiq_")) names.add(match[1])
+    if (match[1]?.startsWith("uiq_")) {
+      names.add(match[1])
+    }
   }
   for (const match of source.matchAll(/registerApiTool\(\s*mcpServer,\s*"([^"]+)"/g)) {
-    if (match[1]?.startsWith("uiq_")) names.add(match[1])
+    if (match[1]?.startsWith("uiq_")) {
+      names.add(match[1])
+    }
   }
   return Array.from(names).sort()
 }
@@ -131,7 +157,10 @@ function extractRunOverrideKeys() {
   if (!block) {
     throw new Error("runOverrideSchema definition not found")
   }
-  return Array.from(block[1].matchAll(/^\s*([a-zA-Z][a-zA-Z0-9]*)\s*:/gm), (entry) => entry[1]).sort()
+  return Array.from(
+    block[1].matchAll(/^\s*([a-zA-Z][a-zA-Z0-9]*)\s*:/gm),
+    (entry) => entry[1]
+  ).sort()
 }
 
 function renderProfileThresholdsDoc() {
@@ -141,6 +170,8 @@ function renderProfileThresholdsDoc() {
   }))
 
   const lines = [
+    "<!-- markdownlint-disable MD013 -->",
+    "",
     "# Generated: Profile Thresholds",
     "",
     "Generated from `configs/profiles/*.yaml`. Do not edit this file manually.",
@@ -176,7 +207,9 @@ function renderProfileThresholdsDoc() {
       : []
     if (requiredEngines.length > 0 || profile.enginePolicy.failOnBlocked !== undefined) {
       lines.push("")
-      lines.push(`- Engine policy required: ${requiredEngines.length > 0 ? `\`${requiredEngines.join("`, `")}\`` : "`(none)`"}`)
+      lines.push(
+        `- Engine policy required: ${requiredEngines.length > 0 ? `\`${requiredEngines.join("`, `")}\`` : "`(none)`"}`
+      )
       if (profile.enginePolicy.failOnBlocked !== undefined) {
         lines.push(`- Engine policy failOnBlocked: \`${profile.enginePolicy.failOnBlocked}\``)
       }
@@ -184,14 +217,22 @@ function renderProfileThresholdsDoc() {
     lines.push("")
   }
 
+  lines.push("<!-- markdownlint-enable MD013 -->")
+  lines.push("")
   return `${lines.join("\n").trimEnd()}\n`
 }
 
 function renderMcpContractDoc() {
   const helperSource = readRepoFile("apps/mcp-server/tests/helpers/mcp-client.ts")
-  const descriptionContractSource = readRepoFile("apps/mcp-server/tests/mcp-description-contract.test.ts")
-  const runToolSource = readRepoFile("apps/mcp-server/src/tools/register-tools/register-run-tools.ts")
-  const apiToolSource = readRepoFile("apps/mcp-server/src/tools/register-tools/register-api-tools.ts")
+  const descriptionContractSource = readRepoFile(
+    "apps/mcp-server/tests/mcp-description-contract.test.ts"
+  )
+  const runToolSource = readRepoFile(
+    "apps/mcp-server/src/tools/register-tools/register-run-tools.ts"
+  )
+  const apiToolSource = readRepoFile(
+    "apps/mcp-server/src/tools/register-tools/register-api-tools.ts"
+  )
   const closedLoopSource = readRepoFile(
     "apps/mcp-server/src/tools/register-tools/register-closed-loop-tools.ts"
   )
@@ -252,7 +293,7 @@ function extractIndentedListBlock(content, jobName, propertyName) {
       continue
     }
     if (!inBlock) {
-      if (/^  [A-Za-z0-9_.-]+:$/.test(line)) {
+      if (/^ {2}[A-Za-z0-9_.-]+:$/.test(line)) {
         break
       }
       if (line.trim() === `${propertyName}:`) {
@@ -260,7 +301,9 @@ function extractIndentedListBlock(content, jobName, propertyName) {
       }
       continue
     }
-    if (!line.startsWith("      - ")) break
+    if (!line.startsWith("      - ")) {
+      break
+    }
     collected.push(line.replace("      - ", "").trim())
   }
 
@@ -268,66 +311,68 @@ function extractIndentedListBlock(content, jobName, propertyName) {
 }
 
 function renderCiTopologyDoc() {
-  const workflows = [
-    {
-      workflow: "PR Gate",
-      path: ".github/workflows/pr.yml",
-      truthSurface: "pr truth deterministic gate (aggregate)",
-      requiredNeeds: extractIndentedListBlock(readRepoFile(".github/workflows/pr.yml"), "pr_truth_gate", "needs"),
-    },
-    {
-      workflow: "CI",
-      path: ".github/workflows/ci.yml",
-      truthSurface: "repo truth deterministic gate (aggregate)",
-      requiredNeeds: extractIndentedListBlock(readRepoFile(".github/workflows/ci.yml"), "repo_truth_required_gate", "needs"),
-    },
-    {
-      workflow: "Nightly Gate",
-      path: ".github/workflows/nightly.yml",
-      truthSurface: "nightly-summary-gate",
-      requiredNeeds: extractIndentedListBlock(
-        readRepoFile(".github/workflows/nightly.yml"),
-        "nightly-summary-gate",
-        "needs"
-      ),
-    },
-    {
-      workflow: "Weekly Gate",
-      path: ".github/workflows/weekly.yml",
-      truthSurface: "weekly-summary-gate",
-      requiredNeeds: extractIndentedListBlock(
-        readRepoFile(".github/workflows/weekly.yml"),
-        "weekly-summary-gate",
-        "needs"
-      ),
-    },
-    {
-      workflow: "Release Candidate Gate",
-      path: ".github/workflows/release-candidate.yml",
-      truthSurface: "release-gate",
-      requiredNeeds: extractIndentedListBlock(
-        readRepoFile(".github/workflows/release-candidate.yml"),
-        "release-gate",
-        "needs"
-      ),
-    },
-  ]
+  const prNeeds = extractIndentedListBlock(
+    readRepoFile(".github/workflows/pr.yml"),
+    "pr_truth_gate",
+    "needs"
+  )
+  const ciNeeds = extractIndentedListBlock(
+    readRepoFile(".github/workflows/ci.yml"),
+    "repo_truth_required_gate",
+    "needs"
+  )
+  const nightlyNeeds = extractIndentedListBlock(
+    readRepoFile(".github/workflows/nightly.yml"),
+    "nightly-summary-gate",
+    "needs"
+  )
+  const manualNeeds = extractIndentedListBlock(
+    readRepoFile(".github/workflows/manual.yml"),
+    "manual-summary-gate",
+    "needs"
+  )
+  const releaseNeeds = extractIndentedListBlock(
+    readRepoFile(".github/workflows/release-candidate.yml"),
+    "release-gate",
+    "needs"
+  )
 
   const lines = [
+    "<!-- markdownlint-disable MD013 -->",
+    "",
     "# Generated: CI Governance Topology",
     "",
-    "Generated from workflow truth surfaces. Do not edit this file manually.",
+    "Generated from workflow truth surfaces and local hook contracts. Do not edit this file manually.",
+    "",
+    "Weekly is no longer a governance layer. The current institutional model is:",
+    "",
+    "- `pre-commit`",
+    "- `pre-push`",
+    "- `hosted`",
+    "- `nightly`",
+    "- `manual`",
+    "",
+    "| Layer | Contract | Canonical Surfaces | Key Inputs |",
+    "| --- | --- | --- | --- |",
+    "| `pre-commit` | local-fast commit gate | `configs/tooling/pre-commit-config.yaml`, `scripts/ci/pre-commit-required-gates.sh` | `env:generate`, `env:check`, `repo:sensitive:check`, `repo:pii:check`, staged atomic gate, staged truth gates |",
+    "| `pre-push` | stronger local pre-push gate | `configs/tooling/pre-commit-config.yaml`, `scripts/ci/pre-push-required-gates.sh` | `repo:sensitive:check`, `repo:sensitive:history:check`, `repo:pii:check`, `openai-residue-gate`, test-truth gates, optional heavy gates |",
+    "| `hosted` | GitHub-hosted deterministic merge/release/maintenance automation | `.github/workflows/pre-commit.yml`, `.github/workflows/pr.yml`, `.github/workflows/ci.yml`, `.github/workflows/release-candidate.yml`, `.github/workflows/runtime-gc.yml` | `pr truth deterministic gate (aggregate)`, `repo truth deterministic gate (aggregate)`, `release-gate`, runtime-gc maintenance |",
+    `| \`nightly\` | scheduled deep verification | \`.github/workflows/nightly.yml\`, \`configs/profiles/nightly.yaml\`, \`configs/profiles/nightly-core.yaml\` | \`${nightlyNeeds.join("`, `")}\` |`,
+    `| \`manual\` | operator-invoked heavy review lane | \`.github/workflows/manual.yml\`, \`configs/profiles/manual.yaml\`, \`configs/profiles/manual-core.yaml\` | \`${manualNeeds.join("`, `")}\` |`,
+    "",
+    "## Hosted Workflow Truth Surfaces",
     "",
     "| Workflow | Truth Surface | Required Inputs |",
     "| --- | --- | --- |",
+    `| \`PR Gate\` | \`pr truth deterministic gate (aggregate)\` | \`${prNeeds.join("`, `")}\` |`,
+    `| \`CI\` | \`repo truth deterministic gate (aggregate)\` | \`${ciNeeds.join("`, `")}\` |`,
+    `| \`Release Candidate Gate\` | \`release-gate\` | \`${releaseNeeds.join("`, `")}\` |`,
+    `| \`Nightly Gate\` | \`nightly-summary-gate\` | \`${nightlyNeeds.join("`, `")}\` |`,
+    `| \`Manual Gate\` | \`manual-summary-gate\` | \`${manualNeeds.join("`, `")}\` |`,
   ]
 
-  for (const workflow of workflows) {
-    lines.push(
-      `| \`${workflow.workflow}\` | \`${workflow.truthSurface}\` | \`${workflow.requiredNeeds.join("`, `")}\` |`
-    )
-  }
-
+  lines.push("")
+  lines.push("<!-- markdownlint-enable MD013 -->")
   lines.push("")
   return `${lines.join("\n").trimEnd()}\n`
 }
@@ -359,7 +404,10 @@ function renderRootAllowlistDoc() {
     "",
     renderTable(
       ["Kind", "Path"],
-      Object.entries(rootAllowlist.archiveTargets).map(([kind, target]) => [`\`${kind}\``, `\`${target}\``])
+      Object.entries(rootAllowlist.archiveTargets).map(([kind, target]) => [
+        `\`${kind}\``,
+        `\`${target}\``,
+      ])
     ),
     "",
   ]
@@ -573,7 +621,10 @@ function renderRuntimeLivePolicyDoc() {
     "",
     renderTable(
       ["Key", "Budget MB"],
-      Object.entries(runtimeLivePolicy.sizeBudgetsMb ?? {}).map(([key, value]) => [`\`${key}\``, `\`${value}\``])
+      Object.entries(runtimeLivePolicy.sizeBudgetsMb ?? {}).map(([key, value]) => [
+        `\`${key}\``,
+        `\`${value}\``,
+      ])
     ),
     "",
   ]

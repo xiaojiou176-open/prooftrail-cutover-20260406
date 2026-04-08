@@ -7,6 +7,16 @@ Generated governance references:
 - `docs/reference/generated/profile-thresholds.md`
 - `docs/reference/generated/ci-governance-topology.md`
 
+## Governance Layers
+
+ProofTrail's current governance model uses five layers on purpose:
+
+- `pre-commit`: local-fast commit gate
+- `pre-push`: stronger local pre-push gate
+- `hosted`: GitHub-hosted deterministic PR, CI, release, and maintenance workflows
+- `nightly`: scheduled deep verification
+- `manual`: operator-invoked heavy review and release-prep lanes
+
 ## Truth Layers
 
 Think of these as four different report cards instead of one giant checkmark:
@@ -134,7 +144,7 @@ not deterministic merge blockers.
   reviews on `workflow_dispatch`, scheduled non-blocking workflows, or explicit
   maintainer commands.
 - Scheduled core lanes stay deterministic by using non-AI profiles such as
-  `nightly-core` and `weekly-core`; Gemini trend reviews remain advisory.
+  `nightly-core` and `manual-core`; Gemini trend reviews remain advisory.
 
 This split keeps CI trustworthy: reproducible gates stay on the mainline, while
 model-dependent audits still exist without turning branch quality into a

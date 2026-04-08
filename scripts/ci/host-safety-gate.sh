@@ -46,7 +46,7 @@ assert_no_matches_outside_allowlist() {
 README_FILE="README.md"
 CLI_FILE="packages/orchestrator/src/cli.ts"
 DESKTOP_SMOKE_WORKFLOW=".github/workflows/desktop-smoke.yml"
-WEEKLY_WORKFLOW=".github/workflows/weekly.yml"
+WEEKLY_WORKFLOW=".github/workflows/manual.yml"
 NIGHTLY_WORKFLOW=".github/workflows/nightly.yml"
 
 assert_contains "$README_FILE" "desktop smoke / e2e / business / soak are now operator-manual lanes"
