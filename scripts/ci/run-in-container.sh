@@ -283,7 +283,7 @@ ensure_baseline_contract() {
     IMAGE="$(bash scripts/ci/resolve-ci-image.sh "${resolve_args[@]}")"
   fi
   case "$IMAGE" in
-    ghcr.io/*/ci:*|ghcr.io/*/ci@sha256:*|ghcr.io/local/*/ci:*|ghcr.io/local/*/ci@sha256:*) ;;
+    ghcr.io/*/ci:*|ghcr.io/*/ci@sha256:*) ;;
     *)
       echo "[container-gate] repo-owned ci image required, got: $IMAGE" >&2
       exit 1
@@ -297,7 +297,7 @@ ensure_baseline_contract() {
       mkdir -p "$ghcr_config"
       printf '%s\n' '{"auths":{},"credsStore":"","credHelpers":{}}' > "${ghcr_config}/config.json"
       HOME="$ghcr_home" DOCKER_CONFIG="$ghcr_config" \
-        run_cmd bash -lc 'printf "%s" "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-github-actions[bot]}" --password-stdin'
+        run_cmd bash -lc "printf '%s' \"\$GITHUB_TOKEN\" | docker login ghcr.io -u \"\${GITHUB_ACTOR:-github-actions[bot]}\" --password-stdin"
     fi
     if ! run_cmd docker pull "$IMAGE"; then
       if [[ "$IMAGE" == ghcr.io/*/ci:* || "$IMAGE" == ghcr.io/*/ci@sha256:* ]]; then
@@ -823,6 +823,7 @@ EOF
     run_script_in_container "$(cat <<'EOF'
 pnpm install --frozen-lockfile >/dev/null 2>&1
 uv sync --frozen --extra dev >/dev/null 2>&1
+pnpm exec playwright install --with-deps chromium >/dev/null 2>&1
 pnpm uiq engines:check --profile pr
 UIQ_ORCHESTRATOR_PARALLEL=1 UIQ_ORCHESTRATOR_MAX_PARALLEL_TASKS=4 pnpm uiq run --profile pr --target web.ci
 node scripts/ci/verify-run-evidence.mjs --profile pr
