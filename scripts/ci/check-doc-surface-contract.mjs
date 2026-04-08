@@ -43,6 +43,11 @@ const surfaces = [
     target: "INTEGRATIONS.md",
     requiredSources: ["README.md", "docs/index.md"],
   },
+  {
+    id: "mcp-distribution-contract",
+    target: "docs/reference/mcp-distribution-contract.md",
+    requiredSources: ["README.md", "docs/index.md", "apps/mcp-server/README.md"],
+  },
 ]
 
 const failures = []

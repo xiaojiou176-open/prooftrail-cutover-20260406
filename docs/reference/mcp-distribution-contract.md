@@ -98,7 +98,7 @@ surfaces for this repository:
 | Surface | Planned identifier | Current state |
 | --- | --- | --- |
 | npm package | `@prooftrail/mcp-server` | ready / **not published** |
-| Docker image | `ghcr.io/.../prooftrail-mcp` | ready / **not published** |
+| Docker image | see future example below | ready / **not published** |
 
 Future package example (**not usable today**):
 

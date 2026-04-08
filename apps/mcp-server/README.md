@@ -126,6 +126,39 @@ If you are deciding whether you should be here or in the API docs first:
 
 The checked-in generated client is a repo-local helper, not a published SDK.
 
+## Install Surfaces
+
+- **Current / usable today**:
+  local checkout + `stdio` through `pnpm mcp:start`, with optional
+  `UIQ_MCP_API_BASE_URL` and `UIQ_MCP_AUTOMATION_TOKEN` when the MCP process
+  should talk to a live backend.
+- **Publish-ready but not yet published**:
+  `@prooftrail/mcp-server` and
+  `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`.
+
+Use
+[docs/reference/mcp-distribution-contract.md](../../docs/reference/mcp-distribution-contract.md)
+for the exact current-vs-future install contract.
+
+## MCP Docker Surface
+
+This repo now includes a dedicated MCP container contract at
+`apps/mcp-server/Dockerfile`.
+
+That container surface is intentionally narrow:
+
+- it builds `dist/server.cjs`
+- it keeps `stdio` as the protocol
+- it does not pretend to be a hosted HTTP endpoint
+- it expects a mounted ProofTrail checkout (or another compatible workspace
+  root) through `UIQ_MCP_WORKSPACE_ROOT`
+
+Repo verification command:
+
+```bash
+pnpm mcp:container:smoke
+```
+
 ## Environment Variables
 
 - `UIQ_MCP_API_BASE_URL`: backend base URL for live API requests.

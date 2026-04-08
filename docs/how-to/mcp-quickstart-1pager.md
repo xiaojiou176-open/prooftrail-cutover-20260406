@@ -15,14 +15,22 @@ Repo mainline: `just run` / `pnpm uiq run --profile pr --target web.local`
 Machine-readable MCP tool contract:
 `docs/reference/generated/mcp-tool-contract.md`
 
+Registry-facing MCP package/install contract:
+`docs/reference/mcp-distribution-contract.md`
+
 Optional advanced tool groups:
 `UIQ_MCP_TOOL_GROUPS=advanced,register,proof,analysis`
 
-The repo mainline is the public default road, while this MCP page is the operator side road.
+The repo mainline is the public default road.
+This MCP page is the operator side road.
 
-If you use an internal generic `run` surface, it should still resolve to that same repo mainline rather than the manual workshop pipeline.
+If you use an internal generic `run` surface,
+it should still resolve to that same repo mainline
+rather than the manual workshop pipeline.
 
-When you document an internal generic `run` surface, it should still resolve to that same repo mainline rather than the manual workshop pipeline.
+When you document an internal generic `run` surface,
+it should still resolve to that same repo mainline
+rather than the manual workshop pipeline.
 
 Use this page when:
 
@@ -37,7 +45,8 @@ Do not treat MCP setup as the first-run public story.
 Use this page if all three statements are already true:
 
 - you understand that `just run` is still the default public road
-- you want an external AI client to call ProofTrail through tools instead of raw REST or shell
+- you want an external AI client to call ProofTrail through tools
+  instead of raw REST or shell
 - you still want the browser, evidence, and recovery substrate to stay governed
 
 If you are still deciding whether ProofTrail itself fits your category, read
@@ -77,9 +86,12 @@ Truth boundary:
 
 In ProofTrail, MCP is useful because it lets an external AI client:
 
-- inspect recent runs and retained evidence without inventing a second control plane
-- launch supported automation and register-oriented flows through a governed tool layer
-- stay attached to the same backend, orchestrator, and run artifacts that power the local product
+- inspect recent runs and retained evidence without inventing
+  a second control plane
+- launch supported automation and register-oriented flows
+  through a governed tool layer
+- stay attached to the same backend, orchestrator,
+  and run artifacts that power the local product
 
 That is the real category fit:
 
@@ -136,9 +148,9 @@ That is the truthful Codex / Claude Code angle here:
 
 | If your main need is... | Start here | Why |
 | :--- | :--- | :--- |
-| prove one workflow locally | `just run` | the deterministic public mainline stays the source of first proof |
-| integrate exact request/response semantics | [API Builder Quickstart](api-builder-quickstart.md) | the API is the contract layer |
-| let an external AI client call governed tools | [ProofTrail MCP Server README](../../apps/mcp-server/README.md) | MCP is the tool layer on top of the same substrate |
+| prove one workflow locally | `just run` | deterministic first-proof path |
+| integrate exact request/response semantics | [API Builder Quickstart](api-builder-quickstart.md) | API is the contract layer |
+| let an external AI client call governed tools | [ProofTrail MCP Server README](../../apps/mcp-server/README.md) | MCP is the governed tool layer |
 
 ## Minimal builder path
 
@@ -152,6 +164,92 @@ If you already know you need MCP, keep the first pass short:
 That order prevents a common mistake: treating MCP like a shortcut around the
 repo contract and evidence model.
 
+## Current install that works today
+
+The current supported install mode is **local checkout + stdio**.
+
+Example configuration:
+
+```json
+{
+  "mcpServers": {
+    "prooftrail": {
+      "command": "pnpm",
+      "args": ["mcp:start"],
+      "cwd": "/absolute/path/to/prooftrail"
+    }
+  }
+}
+```
+
+Optional backend token forwarding example:
+
+```json
+{
+  "mcpServers": {
+    "prooftrail": {
+      "command": "pnpm",
+      "args": ["mcp:start"],
+      "cwd": "/absolute/path/to/prooftrail",
+      "env": {
+        "UIQ_MCP_API_BASE_URL": "http://127.0.0.1:18080",
+        "UIQ_MCP_AUTOMATION_TOKEN": "optional-backend-token"
+      }
+    }
+  }
+}
+```
+
+Protocol and auth boundary:
+
+- protocol = `stdio`
+- transport = `stdio`
+- auth = `local-with-optional-backend-token`
+- OAuth is not part of the current MCP contract
+
+## Publish-ready but not yet published
+
+The following surfaces are part of the public contract now, but they are
+**not usable today** because they are not yet published:
+
+- npm package: `@prooftrail/mcp-server`
+- Docker image: `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`
+
+Future package example (**not yet published**):
+
+```json
+{
+  "mcpServers": {
+    "prooftrail": {
+      "command": "npx",
+      "args": ["-y", "@prooftrail/mcp-server@0.1.1"]
+    }
+  }
+}
+```
+
+Future Docker example (**not yet published**):
+
+```json
+{
+  "mcpServers": {
+    "prooftrail": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/absolute/path/to/prooftrail:/workspace",
+        "-e",
+        "UIQ_MCP_WORKSPACE_ROOT=/workspace",
+        "ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1"
+      ]
+    }
+  }
+}
+```
+
 ## Suggested reading path
 
 1. [ProofTrail for AI Agents](prooftrail-for-ai-agents.md)
@@ -159,7 +257,8 @@ repo contract and evidence model.
 3. [Evidence, Recovery, and Review Workspace](evidence-recovery-review-workspace.md)
 4. [API Builder Quickstart](api-builder-quickstart.md)
 5. [ProofTrail MCP Server README](../../apps/mcp-server/README.md)
-6. [AI Reconstruction Side Road](ai-reconstruction-side-road.md)
+6. [MCP Distribution Contract](../reference/mcp-distribution-contract.md)
+7. [AI Reconstruction Side Road](ai-reconstruction-side-road.md)
 
 That reading path keeps MCP in the right role:
 
