@@ -13,20 +13,38 @@ function readRepoFile(relativePath: string): string {
 function extractToolNames(source: string): string[] {
   const names = new Set<string>()
   for (const match of source.matchAll(/registerTool\(\s*"([^"]+)"/g)) {
-    if (match[1]?.startsWith("uiq_")) names.add(match[1])
+    if (match[1]?.startsWith("uiq_")) {
+      names.add(match[1])
+    }
   }
   for (const match of source.matchAll(/registerApiTool\(\s*mcpServer,\s*"([^"]+)"/g)) {
-    if (match[1]?.startsWith("uiq_")) names.add(match[1])
+    if (match[1]?.startsWith("uiq_")) {
+      names.add(match[1])
+    }
   }
   return Array.from(names).sort()
 }
 
 function extractConstArray(source: string, constName: string): string[] {
   const escaped = constName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  const match = source.match(new RegExp(`${escaped}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s+as\\s+const;?`, "m"))
-  if (!match) throw new Error(`${constName} definition not found`)
+  const match = source.match(
+    new RegExp(`${escaped}\\s*=\\s*\\[([\\s\\S]*?)\\]\\s+as\\s+const;?`, "m")
+  )
+  if (!match) {
+    throw new Error(`${constName} definition not found`)
+  }
   return Array.from(match[1].matchAll(/"([^"]+)"/g), (entry) => entry[1])
 }
+
+const REQUIRED_QUICKSTART_TOOLS = [
+  "uiq_read",
+  "uiq_run",
+  "uiq_run_and_report",
+  "uiq_quality_read",
+  "uiq_api_workflow",
+  "uiq_api_automation",
+  "uiq_proof",
+] as const
 
 function extractBacktickToolNames(docText: string): Set<string> {
   return new Set(Array.from(docText.matchAll(/`(uiq_[a-z0-9_]+)`/g), (entry) => entry[1]))
@@ -34,7 +52,9 @@ function extractBacktickToolNames(docText: string): Set<string> {
 
 function extractRunOverrideKeys(typesSource: string): Set<string> {
   const block = typesSource.match(/export const runOverrideSchema = \{([\s\S]*?)\} as const;?/)
-  if (!block) throw new Error("runOverrideSchema definition not found in core/types.ts")
+  if (!block) {
+    throw new Error("runOverrideSchema definition not found in core/types.ts")
+  }
   return new Set(
     Array.from(block[1].matchAll(/^\s*([a-zA-Z][a-zA-Z0-9]*)\s*:/gm), (entry) => entry[1])
   )
@@ -51,8 +71,12 @@ function extractGeneratedRunOverrideKeys(docText: string): Set<string> {
       inSection = true
       continue
     }
-    if (!inSection) continue
-    if (/^##\s+/.test(line)) break
+    if (!inSection) {
+      continue
+    }
+    if (/^##\s+/.test(line)) {
+      break
+    }
     const match = line.match(/^-\s+`([a-zA-Z][a-zA-Z0-9]*)`$/)
     if (match && !match[1].startsWith("uiq_")) {
       keys.add(match[1])
@@ -62,7 +86,10 @@ function extractGeneratedRunOverrideKeys(docText: string): Set<string> {
   return keys
 }
 
-function diff(expected: Iterable<string>, actual: Iterable<string>): { missing: string[]; extra: string[] } {
+function diff(
+  expected: Iterable<string>,
+  actual: Iterable<string>
+): { missing: string[]; extra: string[] } {
   const expectedSet = new Set(expected)
   const actualSet = new Set(actual)
   return {
@@ -95,11 +122,56 @@ function checkQuickstartDoc(docPath: string, docText: string): DocDrift {
   if (!docText.includes("docs/reference/generated/mcp-tool-contract.md")) {
     issues.push("quickstart must link to the generated MCP tool contract")
   }
+  if (!docText.includes("docs/reference/mcp-distribution-contract.md")) {
+    issues.push("quickstart must link to docs/reference/mcp-distribution-contract.md")
+  }
   if (/UIQ_MCP_ENABLE_ADVANCED_TOOLS\s*=\s*true/i.test(docText)) {
     issues.push("quickstart must not present deprecated advanced-tools env flags")
   }
   if (!/UIQ_MCP_TOOL_GROUPS\s*=\s*advanced,register,proof,analysis/i.test(docText)) {
     issues.push("quickstart must document optional group opt-in via UIQ_MCP_TOOL_GROUPS")
+  }
+  if (!docText.includes('"command": "pnpm"') || !docText.includes('"args": ["mcp:start"]')) {
+    issues.push("quickstart must document the current local stdio install example")
+  }
+  if (!docText.includes("@prooftrail/mcp-server") || !/not yet published/i.test(docText)) {
+    issues.push("quickstart must describe the future package surface as not yet published")
+  }
+  if (
+    !docText.includes("protocol = `stdio`") ||
+    !docText.includes("auth = `local-with-optional-backend-token`")
+  ) {
+    issues.push("quickstart must state protocol/auth boundary")
+  }
+
+  return { docPath, issues }
+}
+
+function checkDistributionContractDoc(docPath: string, docText: string): DocDrift {
+  const issues: string[] = []
+  const requiredPhrases = [
+    "@prooftrail/mcp-server",
+    "ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1",
+    "protocol",
+    "stdio",
+    "auth boundary",
+    "local-with-optional-backend-token",
+    "Current / usable today",
+    "Publish-ready but not yet published",
+  ]
+
+  for (const phrase of requiredPhrases) {
+    if (!docText.includes(phrase)) {
+      issues.push(`distribution contract missing phrase: ${phrase}`)
+    }
+  }
+
+  if (!docText.includes('"command": "pnpm"') || !docText.includes('"args": ["mcp:start"]')) {
+    issues.push("distribution contract must include the current local stdio config example")
+  }
+
+  if (!docText.includes('"command": "npx"') || !docText.includes('"command": "docker"')) {
+    issues.push("distribution contract must include future package and docker examples")
   }
 
   return { docPath, issues }
@@ -127,7 +199,9 @@ function checkGeneratedReference(
     issues.push(`generated reference missing tools: ${toolDiff.missing.join(", ")}`)
   }
   if (runOverrideDiff.missing.length > 0) {
-    issues.push(`generated reference missing run override keys: ${runOverrideDiff.missing.join(", ")}`)
+    issues.push(
+      `generated reference missing run override keys: ${runOverrideDiff.missing.join(", ")}`
+    )
   }
 
   return { docPath, issues }
@@ -135,16 +209,19 @@ function checkGeneratedReference(
 
 function main(): void {
   const helperSource = readRepoFile("apps/mcp-server/tests/helpers/mcp-client.ts")
-  const descriptionContractSource = readRepoFile("apps/mcp-server/tests/mcp-description-contract.test.ts")
   const typesSource = readRepoFile("apps/mcp-server/src/core/types.ts")
-  const runToolsSource = readRepoFile("apps/mcp-server/src/tools/register-tools/register-run-tools.ts")
+  const runToolsSource = readRepoFile(
+    "apps/mcp-server/src/tools/register-tools/register-run-tools.ts"
+  )
   const closedLoopToolsSource = readRepoFile(
     "apps/mcp-server/src/tools/register-tools/register-closed-loop-tools.ts"
   )
-  const apiToolsSource = readRepoFile("apps/mcp-server/src/tools/register-tools/register-api-tools.ts")
+  const apiToolsSource = readRepoFile(
+    "apps/mcp-server/src/tools/register-tools/register-api-tools.ts"
+  )
 
   const coreWorkingSet = extractConstArray(helperSource, "CORE_TOOL_NAMES")
-  const navigationTools = extractConstArray(descriptionContractSource, "REQUIRED_NEW_DOC_TOOLS")
+  const navigationTools = [...REQUIRED_QUICKSTART_TOOLS]
   const runOverrideKeys = extractRunOverrideKeys(typesSource)
   const registeredTools = Array.from(
     new Set([
@@ -177,6 +254,11 @@ function main(): void {
           registeredTools,
           runOverrideKeys
         ),
+    },
+    {
+      path: "docs/reference/mcp-distribution-contract.md",
+      check: (text: string) =>
+        checkDistributionContractDoc("docs/reference/mcp-distribution-contract.md", text),
     },
   ]
 
