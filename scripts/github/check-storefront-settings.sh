@@ -19,14 +19,24 @@ fi
 
 json="$(gh api "repos/${repo}")"
 community_json="$(gh api "repos/${repo}/community/profile")"
+pages_json="$(gh api "repos/${repo}/pages")"
 releases_count="$(gh api "repos/${repo}/releases" --jq 'length')"
+
+repo_owner="${repo%%/*}"
+repo_name="${repo##*/}"
+expected_homepage="https://${repo_owner}.github.io/${repo_name}/"
 
 description="$(jq -r '.description // ""' <<<"$json")"
 homepage="$(jq -r '.homepage // ""' <<<"$json")"
+has_issues="$(jq -r '.has_issues' <<<"$json")"
 has_discussions="$(jq -r '.has_discussions' <<<"$json")"
 topics="$(jq -r '.topics | join(",")' <<<"$json")"
 health_percentage="$(jq -r '.health_percentage // 0' <<<"$community_json")"
 content_reports_enabled="$(jq -r '.content_reports_enabled' <<<"$community_json")"
+pages_url="$(jq -r '.html_url // ""' <<<"$pages_json")"
+pages_build_status="$(jq -r '.status // ""' <<<"$pages_json")"
+pages_https_enforced="$(jq -r '.https_enforced // false' <<<"$pages_json")"
+pages_http_status="$(curl -fsS -o /dev/null -w '%{http_code}' "$expected_homepage")"
 
 social_preview_asset="assets/storefront/prooftrail-social-preview.png"
 social_preview_exists="false"
@@ -64,11 +74,34 @@ if [[ "$has_discussions" != "true" ]]; then
   discussions_reason="discussions are not enabled"
 fi
 
+issues_status="pass"
+issues_reason="issues enabled"
+if [[ "$has_issues" != "true" ]]; then
+  issues_status="fail"
+  issues_reason="issues are not enabled"
+fi
+
 homepage_status="pass"
-homepage_reason="homepage aligned to the public docs hub"
-if [[ "$homepage" != "https://github.com/xiaojiou176-open/prooftrail/blob/main/docs/index.md" ]]; then
+homepage_reason="homepage aligned to GitHub Pages"
+if [[ "$homepage" != "$expected_homepage" ]]; then
   homepage_status="fail"
-  homepage_reason="homepage is not aligned to the public docs hub"
+  homepage_reason="homepage is not aligned to the GitHub Pages URL"
+fi
+
+pages_status="pass"
+pages_reason="GitHub Pages points to the canonical URL and returns HTTP 200"
+if [[ "$pages_url" != "$expected_homepage" ]]; then
+  pages_status="fail"
+  pages_reason="GitHub Pages html_url is not aligned to the canonical GitHub Pages URL"
+elif [[ "$pages_build_status" != "built" ]]; then
+  pages_status="fail"
+  pages_reason="GitHub Pages is not in built status"
+elif [[ "$pages_https_enforced" != "true" ]]; then
+  pages_status="fail"
+  pages_reason="GitHub Pages does not enforce HTTPS"
+elif [[ "$pages_http_status" != "200" ]]; then
+  pages_status="fail"
+  pages_reason="GitHub Pages does not return HTTP 200"
 fi
 
 topics_status="pass"
@@ -120,7 +153,9 @@ overall_status="pass"
 for status in \
   "$description_status" \
   "$discussions_status" \
+  "$issues_status" \
   "$homepage_status" \
+  "$pages_status" \
   "$topics_status" \
   "$releases_status" \
   "$social_preview_status" \
@@ -139,8 +174,14 @@ if (( output_json == 1 )); then
     --arg repo "$repo" \
     --arg description "$description" \
     --arg homepage "$homepage" \
+    --arg expected_homepage "$expected_homepage" \
+    --arg has_issues "$has_issues" \
     --arg has_discussions "$has_discussions" \
     --arg topics "$topics" \
+    --arg pages_url "$pages_url" \
+    --arg pages_build_status "$pages_build_status" \
+    --arg pages_https_enforced "$pages_https_enforced" \
+    --arg pages_http_status "$pages_http_status" \
     --argjson releases_count "$releases_count" \
     --argjson health_percentage "$health_percentage" \
     --arg content_reports_enabled "$content_reports_enabled" \
@@ -151,8 +192,12 @@ if (( output_json == 1 )); then
     --arg description_reason "$description_reason" \
     --arg discussions_status "$discussions_status" \
     --arg discussions_reason "$discussions_reason" \
+    --arg issues_status "$issues_status" \
+    --arg issues_reason "$issues_reason" \
     --arg homepage_status "$homepage_status" \
     --arg homepage_reason "$homepage_reason" \
+    --arg pages_status "$pages_status" \
+    --arg pages_reason "$pages_reason" \
     --arg topics_status "$topics_status" \
     --arg topics_reason "$topics_reason" \
     --arg releases_status "$releases_status" \
@@ -170,9 +215,15 @@ if (( output_json == 1 )); then
       repo_metadata: {
         description: $description,
         homepage: $homepage,
+        expected_homepage: $expected_homepage,
+        has_issues: ($has_issues == "true"),
         has_discussions: ($has_discussions == "true"),
         topics: ($topics | if length == 0 then [] else split(",") end),
-        releases_count: $releases_count
+        releases_count: $releases_count,
+        pages_url: $pages_url,
+        pages_build_status: $pages_build_status,
+        pages_https_enforced: ($pages_https_enforced == "true"),
+        pages_http_status: ($pages_http_status | tonumber)
       },
       checks: {
         description: {
@@ -183,9 +234,22 @@ if (( output_json == 1 )); then
           status: $discussions_status,
           reason: $discussions_reason
         },
+        issues: {
+          status: $issues_status,
+          reason: $issues_reason
+        },
         homepage: {
           status: $homepage_status,
           reason: $homepage_reason
+        },
+        pages: {
+          status: $pages_status,
+          reason: $pages_reason,
+          expected_url: $expected_homepage,
+          actual_url: $pages_url,
+          build_status: $pages_build_status,
+          https_enforced: ($pages_https_enforced == "true"),
+          http_status: ($pages_http_status | tonumber)
         },
         topics: {
           status: $topics_status,
@@ -219,7 +283,12 @@ fi
 echo "repo=${repo}"
 echo "description=${description}"
 echo "homepage=${homepage}"
+echo "expected_homepage=${expected_homepage}"
+echo "has_issues=${has_issues}"
 echo "has_discussions=${has_discussions}"
+echo "pages_url=${pages_url}"
+echo "pages_build_status=${pages_build_status}"
+echo "pages_http_status=${pages_http_status}"
 echo "topics=${topics}"
 echo "releases=${releases_count}"
 echo "community_health=${health_percentage}"
@@ -238,8 +307,18 @@ if [[ "$discussions_status" == "fail" ]]; then
   failures=$((failures + 1))
 fi
 
+if [[ "$issues_status" == "fail" ]]; then
+  echo "fail: ${issues_reason}"
+  failures=$((failures + 1))
+fi
+
 if [[ "$homepage_status" == "fail" ]]; then
   echo "fail: ${homepage_reason}"
+  failures=$((failures + 1))
+fi
+
+if [[ "$pages_status" == "fail" ]]; then
+  echo "fail: ${pages_reason}"
   failures=$((failures + 1))
 fi
 

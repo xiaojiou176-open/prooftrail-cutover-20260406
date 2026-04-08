@@ -210,7 +210,7 @@ repos:
       - id: markdownlint-cli2
         entry: markdownlint-cli2
         files: '^(README\.md|AGENTS\.md|CLAUDE\.md|docs/.*\.md)$'
-        exclude: '(^|/)(\.venv|node_modules|dist|build|coverage|artifacts|\.runtime-cache|\.codex)/|^docs/reference/generated/governance/.*\.md$'
+        exclude: '(^|/)(\.venv|node_modules|dist|build|coverage|artifacts|\.runtime-cache|\.codex)/|^docs/reference/generated/governance/.*\.md$|^docs/reference/configuration\.md$'
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.9

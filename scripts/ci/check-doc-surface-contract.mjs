@@ -33,6 +33,16 @@ const surfaces = [
     target: "docs/reference/release-supply-chain-policy.md",
     requiredSources: ["README.md", "docs/index.md"],
   },
+  {
+    id: "distribution-status",
+    target: "DISTRIBUTION.md",
+    requiredSources: ["README.md", "docs/index.md"],
+  },
+  {
+    id: "integration-boundaries",
+    target: "INTEGRATIONS.md",
+    requiredSources: ["README.md", "docs/index.md"],
+  },
 ]
 
 const failures = []
@@ -56,7 +66,9 @@ for (const surface of surfaces) {
 
 if (failures.length > 0) {
   console.error("[doc-surface-contract] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 

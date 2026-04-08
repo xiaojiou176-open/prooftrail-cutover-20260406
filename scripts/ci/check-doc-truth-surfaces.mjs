@@ -55,15 +55,12 @@ const allowedDocs = new Set([
   "docs/reference/generated/governance/upstream-registry.md",
 ])
 
-const bannedTokens = [
-  "docs/plans/",
-  "docs/history/",
-  "docs/audits/",
-  "docs/closure/",
-]
+const bannedTokens = ["docs/plans/", "docs/history/", "docs/audits/", "docs/closure/"]
 
 const englishRequiredMarkdown = [
   "README.md",
+  "DISTRIBUTION.md",
+  "INTEGRATIONS.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
   "SUPPORT.md",
@@ -93,7 +90,9 @@ for (const file of actualDocs) {
 
 for (const file of englishRequiredMarkdown) {
   const fullPath = path.join(repoRoot, file)
-  if (!fs.existsSync(fullPath)) continue
+  if (!fs.existsSync(fullPath)) {
+    continue
+  }
   const content = fs.readFileSync(fullPath, "utf8")
   if (/[\p{Script=Han}]/u.test(content)) {
     failures.push(`${file} contains non-English Han characters`)
@@ -107,14 +106,18 @@ for (const file of englishRequiredMarkdown) {
 
 if (failures.length > 0) {
   console.error("[doc-truth-surfaces] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 
 console.log("[doc-truth-surfaces] ok")
 
 function walkFiles(dir) {
-  if (!fs.existsSync(dir)) return []
+  if (!fs.existsSync(dir)) {
+    return []
+  }
   const entries = fs.readdirSync(dir, { withFileTypes: true })
   const files = []
   for (const entry of entries) {

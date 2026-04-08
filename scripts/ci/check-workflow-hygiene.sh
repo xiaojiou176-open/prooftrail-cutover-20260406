@@ -8,10 +8,10 @@ readonly workflow_files=(
 
 readonly helper_workflow_files=(
   ".github/workflows/nightly.yml"
-  ".github/workflows/weekly.yml"
+  ".github/workflows/manual.yml"
   ".github/workflows/release-candidate.yml"
   ".github/workflows/upstream-drift-audit.yml"
-  ".github/workflows/runtime-gc-weekly.yml"
+  ".github/workflows/runtime-gc.yml"
   ".github/workflows/desktop-smoke.yml"
 )
 
@@ -51,17 +51,17 @@ check_present() {
 }
 
 check_absent "clean: false" "${workflow_files[@]}"
-check_absent '${{ github.workspace }}/.runtime-cache/toolcache' "${workflow_files[@]}"
-check_absent '${GITHUB_WORKSPACE}/.runtime-cache/uv' "${action_files[@]}"
+check_absent "\${{ github.workspace }}/.runtime-cache/toolcache" "${workflow_files[@]}"
+check_absent "\${GITHUB_WORKSPACE}/.runtime-cache/uv" "${action_files[@]}"
 check_absent "uses: actions/upload-artifact@v4" "${helper_workflow_files[@]}" ".github/workflows/pre-commit.yml" ".github/workflows/release-candidate.yml" ".github/workflows/upstream-drift-audit.yml"
 check_absent "uses: ./.github/actions/self-hosted-checkout" "${helper_workflow_files[@]}" ".github/workflows/pre-commit.yml" ".github/workflows/release-candidate.yml"
-check_absent '["self-hosted","shared-pool"]' ".github/workflows/pr.yml" ".github/workflows/ci.yml" ".github/workflows/weekly.yml"
-check_absent "  schedule:" ".github/workflows/nightly.yml" ".github/workflows/weekly.yml" ".github/workflows/upstream-drift-audit.yml" ".github/workflows/desktop-smoke.yml"
+check_absent '["self-hosted","shared-pool"]' ".github/workflows/pr.yml" ".github/workflows/ci.yml" ".github/workflows/manual.yml"
+check_absent "  schedule:" ".github/workflows/nightly.yml" ".github/workflows/manual.yml" ".github/workflows/upstream-drift-audit.yml" ".github/workflows/desktop-smoke.yml"
 
 check_present "uses: ./.github/actions/workspace-sanitize" "${workflow_files[@]}"
 check_present "uses: ./.github/actions/repo-checkout" "${helper_workflow_files[@]}" ".github/workflows/pre-commit.yml" ".github/workflows/release-candidate.yml"
-check_present "environment: owner-approved-sensitive" ".github/workflows/upstream-drift-audit.yml" ".github/workflows/desktop-smoke.yml" ".github/workflows/nightly.yml" ".github/workflows/weekly.yml" ".github/workflows/pr.yml" ".github/workflows/ci.yml"
-check_present '${{ runner.temp }}/ms-playwright' ".github/actions/setup-playwright/action.yml"
-check_present 'runner_temp="${RUNNER_TEMP:?RUNNER_TEMP is required}"' ".github/actions/workspace-sanitize/action.yml"
+check_present "environment: owner-approved-sensitive" ".github/workflows/upstream-drift-audit.yml" ".github/workflows/desktop-smoke.yml" ".github/workflows/nightly.yml" ".github/workflows/manual.yml" ".github/workflows/pr.yml" ".github/workflows/ci.yml"
+check_present "\${{ runner.temp }}/ms-playwright" ".github/actions/setup-playwright/action.yml"
+check_present "runner_temp=\"\${RUNNER_TEMP:?RUNNER_TEMP is required}\"" ".github/actions/workspace-sanitize/action.yml"
 
 echo "workflow hygiene checks passed"

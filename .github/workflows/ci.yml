@@ -96,7 +96,7 @@ jobs:
             ci_gatechain:
               - '.github/workflows/ci.yml'
               - '.github/workflows/nightly.yml'
-              - '.github/workflows/weekly.yml'
+              - '.github/workflows/manual.yml'
               - '.github/workflows/pre-commit.yml'
               - 'scripts/ci/*gate*'
               - 'scripts/ci/*truth*'

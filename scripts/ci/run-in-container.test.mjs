@@ -52,7 +52,7 @@ test("run-in-container exposes the canonical task list", () => {
     "nightly-integration-full",
     "nightly-core-run",
     "nightly-hard-gates",
-    "weekly-core-run",
+    "manual-core-run",
     "release-docs-gate",
     "release-typecheck",
     "release-candidate-gate",
@@ -235,13 +235,13 @@ test("run-in-container supports nightly backend shard workflow task routing", ()
   assert.match(run.stdout, /find apps\/api\/tests -type f -name "test_\*\.py"/)
 })
 
-test("run-in-container supports weekly core workflow task routing", () => {
-  const run = runDry("weekly-core-run")
+test("run-in-container supports manual core workflow task routing", () => {
+  const run = runDry("manual-core-run")
   assert.equal(run.status, 0)
   assert.match(run.stdout, /command -v k6 >/)
   assert.match(run.stdout, /command -v semgrep >/)
-  assert.match(run.stdout, /pnpm uiq engines:check --profile weekly-core/)
-  assert.match(run.stdout, /pnpm uiq run --profile weekly-core --target web\.ci/)
+  assert.match(run.stdout, /pnpm uiq engines:check --profile manual-core/)
+  assert.match(run.stdout, /pnpm uiq run --profile manual-core --target web\.ci/)
   assert.doesNotMatch(run.stdout, /GEMINI_API_KEY/)
 })
 
@@ -289,7 +289,10 @@ test("run-in-container dry-run pins writable home for non-root bootstrap", () =>
   assert.match(run.stdout, /--user/)
   assert.match(run.stdout, /HOME=\/workspace\/\.runtime-cache\/container-home/)
   assert.match(run.stdout, /XDG_CACHE_HOME=\/workspace\/\.runtime-cache\/container-home\/\.cache/)
-  assert.match(run.stdout, /UV_PROJECT_ENVIRONMENT=\/workspace\/\.runtime-cache\/container-home\/\.local\/share\/uv\/project-venv/)
+  assert.match(
+    run.stdout,
+    /UV_PROJECT_ENVIRONMENT=\/workspace\/\.runtime-cache\/container-home\/\.local\/share\/uv\/project-venv/
+  )
   assert.match(run.stdout, /UIQ_HOST_ARCH=/)
   assert.match(
     run.stdout,
@@ -301,7 +304,16 @@ test("run-in-container dry-run pins writable home for non-root bootstrap", () =>
 test("run-in-container rejects non repo-owned image overrides", () => {
   const run = spawnSync(
     "bash",
-    [SCRIPT, "--task", "lint", "--gate", "local-required", "--dry-run", "--image", "node:20-bookworm-slim"],
+    [
+      SCRIPT,
+      "--task",
+      "lint",
+      "--gate",
+      "local-required",
+      "--dry-run",
+      "--image",
+      "node:20-bookworm-slim",
+    ],
     {
       cwd: REPO_ROOT,
       env: process.env,

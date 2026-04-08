@@ -1679,7 +1679,7 @@ variables:
     required: false
     sensitive: false
     description: "Governed env variable detected by automated env scan (runtime scope)."
-  - name: WEEKLY_RUN_ID
+  - name: MANUAL_RUN_ID
     section: tests
     default: ""
     required: false

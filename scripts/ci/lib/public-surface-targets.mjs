@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process"
 
 export const canonicalPublicFiles = [
   "README.md",
+  "DISTRIBUTION.md",
+  "INTEGRATIONS.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
   "SUPPORT.md",
@@ -42,10 +44,7 @@ export const trackedFixturePrefixes = [
 ]
 
 export function listTrackedFiles() {
-  return execFileSync("git", ["ls-files"], { encoding: "utf8" })
-    .trim()
-    .split("\n")
-    .filter(Boolean)
+  return execFileSync("git", ["ls-files"], { encoding: "utf8" }).trim().split("\n").filter(Boolean)
 }
 
 export function collectTrackedPublicSurfaceTargets() {
@@ -58,10 +57,7 @@ export function collectTrackedPublicSurfaceTargets() {
   )
 
   return [
-    ...new Set([
-      ...canonicalPublicFiles.filter((file) => trackedSet.has(file)),
-      ...fixtureTargets,
-    ]),
+    ...new Set([...canonicalPublicFiles.filter((file) => trackedSet.has(file)), ...fixtureTargets]),
   ]
 }
 

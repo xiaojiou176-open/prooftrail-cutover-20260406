@@ -10,6 +10,7 @@ const NEW_TOOL_NAMES = [
   "uiq_api_workflow",
   "uiq_catalog",
   "uiq_compare_perf",
+  "uiq_evidence_runs",
   "uiq_list_runs",
   "uiq_model_target_capabilities",
   "uiq_proof",
@@ -94,8 +95,12 @@ nodeTest("mcp resources expose both latest manifest and summary", { timeout: 30_
     const uris = listed.resources.map((r) => r.uri).sort()
     assert.deepEqual(uris, ["uiq://runs/latest/manifest", "uiq://runs/latest/summary"])
 
-    const manifest = await harness.client.readResource({ uri: "uiq://runs/latest/manifest" })
-    const summary = await harness.client.readResource({ uri: "uiq://runs/latest/summary" })
+    const manifest = await harness.client.readResource({
+      uri: "uiq://runs/latest/manifest",
+    })
+    const summary = await harness.client.readResource({
+      uri: "uiq://runs/latest/summary",
+    })
 
     const manifestText =
       manifest.contents.find((c): c is { uri: string; text: string } => "text" in c)?.text ?? ""

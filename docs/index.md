@@ -14,7 +14,7 @@ Codex, Claude Code, OpenHands, OpenCode, OpenClaw, or another AI-agent shell,
 use the growth matrix and builder entry together. That is the truthful
 discovery route in this repo.
 
-<img src="../assets/storefront/prooftrail-readme-hero.svg" alt="ProofTrail proof loop showing run, retained evidence, and exact-step recovery." />
+![ProofTrail proof loop](../assets/storefront/prooftrail-readme-hero.svg)
 
 The first-run UI lane stays intentionally strict:
 `Quick Launch -> Task Center -> Recovery Center -> Flow Workshop`.
@@ -84,6 +84,11 @@ the deepest current evidence/recovery/review loop.
 - [API builder quickstart](how-to/api-builder-quickstart.md)
 - [docs/reference/universal-api.md](reference/universal-api.md)
 - [ProofTrail MCP Server README](../apps/mcp-server/README.md)
+
+## Distribution And Integration Status
+
+- [DISTRIBUTION.md](../DISTRIBUTION.md)
+- [INTEGRATIONS.md](../INTEGRATIONS.md)
 
 ## Coding-Agent And Agent-Stack Search Path
 

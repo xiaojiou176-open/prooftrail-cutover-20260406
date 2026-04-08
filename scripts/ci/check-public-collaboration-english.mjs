@@ -5,6 +5,8 @@ import fs from "node:fs"
 const canonicalPublicFiles = [
   "LICENSE",
   "README.md",
+  "DISTRIBUTION.md",
+  "INTEGRATIONS.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
   "SUPPORT.md",
@@ -59,7 +61,9 @@ for (const target of [...canonicalPublicFiles, ...engineeringFacingEnglishFiles]
 
 if (failures.length > 0) {
   console.error("[public-collaboration-english] failed:")
-  for (const failure of failures) console.error(`- ${failure}`)
+  for (const failure of failures) {
+    console.error(`- ${failure}`)
+  }
   process.exit(1)
 }
 

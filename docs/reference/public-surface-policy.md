@@ -18,6 +18,11 @@ Public-facing guidance must do three things at the same time:
 2. show where proof comes from
 3. avoid mixing current guidance with archive, planning, or rehearsal material
 
+Supporting truth surfaces that do not act as storefront claims:
+
+- `DISTRIBUTION.md` for current distribution and publication status
+- `INTEGRATIONS.md` for official-vs-repo-native integration boundaries
+
 If a document cannot help a first-time evaluator answer one of the visitor four
 questions, it should not be treated as a storefront surface.
 
@@ -52,6 +57,7 @@ The current storefront landing seeds include:
 
 Those pages should stay cross-linked and truthful:
 
-- the outward matrix explains audience fit, coding-agent fit, and current product shape
+- the outward matrix explains audience fit, coding-agent fit, and current
+  product shape
 - the API builder quickstart explains direct integration
 - the README and docs index decide the reading order

@@ -8,6 +8,8 @@ REQUIRED_FILES=(
   "AGENTS.md"
   "CLAUDE.md"
   "README.md"
+  "DISTRIBUTION.md"
+  "INTEGRATIONS.md"
   "CONTRIBUTING.md"
   "SECURITY.md"
   "SUPPORT.md"

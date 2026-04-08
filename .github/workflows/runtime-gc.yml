@@ -1,15 +1,13 @@
-name: Runtime GC Weekly
+name: Runtime GC
 
 on:
-  schedule:
-    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: runtime-gc-weekly-${{ github.workflow }}-${{ github.ref }}
+  group: runtime-gc-manual-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

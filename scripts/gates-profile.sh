@@ -14,7 +14,7 @@ case "$PROFILE" in
     ./scripts/preflight.sh
     (cd apps/automation-runner && pnpm lint && pnpm check)
     ;;
-  weekly)
+  manual)
     ./scripts/docs-gate.sh
     ./scripts/security-scan.sh
     ./scripts/preflight.sh
@@ -22,7 +22,7 @@ case "$PROFILE" in
     ./scripts/run-load-k6.sh
     ;;
   *)
-    echo "usage: ./scripts/gates-profile.sh [pr|nightly|weekly]"
+    echo "usage: ./scripts/gates-profile.sh [pr|nightly|manual]"
     exit 1
     ;;
 esac
