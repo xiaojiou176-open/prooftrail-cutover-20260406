@@ -35,8 +35,7 @@ Use it when you want one portable skill folder that teaches:
 ## Current truthful state
 
 - the repo-owned packet is complete as a portable MCP-aware skill folder
-- ClawHub/OpenHands are best-fit host-native later lanes, not live listing
-  claims made by this README
+- a ClawHub skill page for this packet can be read back live today
 - the OpenHands/extensions lane currently has a fresh external review receipt at
   PR #161, but `review-pending` is still not the same as `listed-live`
 - npm and Docker publication remain documented later lanes and are not live
@@ -44,6 +43,5 @@ Use it when you want one portable skill folder that teaches:
 ## What this packet must not claim
 
 - no live OpenHands listing without fresh PR/read-back
-- no ClawHub listing without fresh host-side read-back
 - no published npm package or Docker image unless the repo has fresh proof
 - no hosted ProofTrail SaaS or hosted MCP endpoint

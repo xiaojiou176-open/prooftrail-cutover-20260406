@@ -105,7 +105,9 @@ published.
 - ProofTrail is not a hosted service
 - ProofTrail is not a hosted SaaS service
 - ProofTrail is not a hosted MCP endpoint
-- this packet does not claim a live OpenHands or ClawHub listing
+- this packet may appear as a live ClawHub skill page, but that does not turn
+  ProofTrail into an official plugin or hosted MCP endpoint
+- this packet does not claim a live OpenHands/extensions listing
 - future npm or Docker shapes are publish-ready but not yet published
 
 ## Local references
