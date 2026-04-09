@@ -19,6 +19,7 @@ Use it when you need the shortest truthful summary of:
 | Field | Value |
 | --- | --- |
 | Name | `@prooftrail/mcp-server` |
+| Registry server name | `io.github.xiaojiou176-open/prooftrail-mcp` |
 | Description | `Governed MCP access to ProofTrail runs, proof, and workflows` |
 | Version | `0.1.1` |
 | Homepage | `https://xiaojiou176-open.github.io/prooftrail/` |
@@ -102,6 +103,9 @@ surfaces for this repository:
 | npm package | `@prooftrail/mcp-server` | ready / **not published** |
 | Docker image | see future example below | ready / **not published** |
 
+The repo-local registry submission artifact now lives at
+`apps/mcp-server/server.json`.
+
 Future package example (**not usable today**):
 
 ```json
@@ -156,6 +160,7 @@ pnpm mcp:container:smoke
 ## Supporting docs
 
 - [ProofTrail MCP Server README](../../apps/mcp-server/README.md)
+- [Registry submission artifact](../../apps/mcp-server/server.json)
 - [MCP for Browser Automation](../how-to/mcp-quickstart-1pager.md)
 - [Distribution Status](../../DISTRIBUTION.md)
 - [Integration Boundaries](../../INTEGRATIONS.md)

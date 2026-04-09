@@ -19,7 +19,7 @@ Current public release truth:
 | MCP npm package (`@prooftrail/mcp-server`) | yes | yes | no | The package now has a publish-ready contract, but it is **not yet published**. |
 | AI prompts npm package (`@uiq/ai-prompts`) | yes | no | no | The package exists for repo-local use, but `packages/ai-prompts/package.json` is `private: true`. |
 | PyPI package (`prooftrail`) | yes | no | no | `pyproject.toml` exists, but this repo does not currently prove a PyPI release, and the Python package version is not release-synced with `v0.1.1`. |
-| MCP Registry listing | partial | no | no | The repo contains an MCP server implementation, but no registry publication or listing proof is materialized here. |
+| MCP Registry listing | partial | no | no | The repo now materializes `apps/mcp-server/server.json` as the registry submission artifact, but the npm package is still unpublished and no upstream listing proof exists. |
 | ProofTrail MCP install skill | yes | yes | no | `skills/prooftrail-mcp/` is materialized in the repo, but it is **not yet published** to any skill registry. |
 | MCP Docker image (`ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`) | yes | yes | no | The Docker surface is documented and buildable, but the image is **not yet published**. |
 | Starter / plugin bundle metadata | no dedicated surface | no | no | This repo still does not ship a dedicated starter bundle or browser-plugin distribution surface. |

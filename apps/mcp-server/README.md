@@ -11,6 +11,10 @@ contract**.
 It is not proof that ProofTrail already has a published registry package,
 published Docker image, or official vendor integration.
 
+The repo now also materializes the official MCP Registry submission descriptor
+at `apps/mcp-server/server.json`, but that artifact still does **not** imply a
+live registry listing.
+
 ## API vs MCP In One Sentence
 
 - **API** = the contract layer
@@ -140,6 +144,12 @@ The checked-in generated client is a repo-local helper, not a published SDK.
 - **Publish-ready but not yet published**:
   `@prooftrail/mcp-server` and
   `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`.
+
+Registry submission artifact:
+
+- `apps/mcp-server/server.json` is the repo-local descriptor for official MCP
+  Registry submission.
+- It is a submission artifact, not a listing receipt.
 
 Use
 [docs/reference/mcp-distribution-contract.md](../../docs/reference/mcp-distribution-contract.md)
