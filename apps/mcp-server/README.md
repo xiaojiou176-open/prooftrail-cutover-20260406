@@ -6,6 +6,11 @@ It exposes this repository's automation, reporting, and register orchestration
 flows as MCP tools for external AI clients without replacing the canonical
 public mainline.
 
+This README documents a **repo-native MCP surface** and a **later-lane package
+contract**.
+It is not proof that ProofTrail already has a published registry package,
+published Docker image, or official vendor integration.
+
 ## API vs MCP In One Sentence
 
 - **API** = the contract layer
