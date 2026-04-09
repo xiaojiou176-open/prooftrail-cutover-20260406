@@ -1,6 +1,8 @@
 # MCP Distribution Contract
 
 This page is the **registry-facing contract** for the ProofTrail MCP surface.
+It documents a package/container lane that is **planned and publish-ready in
+repo**, not a lane that is already published or listed upstream.
 
 Use it when you need the shortest truthful summary of:
 
@@ -90,7 +92,7 @@ Truth boundary:
 - backend token forwarding is optional
 - OAuth is not part of the current MCP contract
 
-## Publish-ready but not yet published
+## Publish-ready but not yet published (later-lane contract)
 
 The following names are reserved as the **publish-ready** package and container
 surfaces for this repository:
