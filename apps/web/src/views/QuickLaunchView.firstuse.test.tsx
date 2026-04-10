@@ -141,6 +141,20 @@ describe("QuickLaunchView first-use guard rails", () => {
     expect(html).toContain("Start run")
   })
 
+  it("adds a clear exit condition before leaving Quick Launch", () => {
+    const html = renderFirstUseView({
+      firstUseStage: "run",
+      firstUseProgress: { configValid: true, runTriggered: true, resultSeen: false },
+      templates: [baseTemplate],
+      selectedTemplateId: baseTemplate.template_id,
+      runParams: { email: "demo@example.com" },
+    })
+    expect(html).toContain("Leave this page only when these three things are true")
+    expect(html).toContain(
+      "The parameter rail is valid, one canonical run is already visible, and your next click is to Task Center instead of a side road."
+    )
+  })
+
   it("exposes sidebar toggle state with aria-expanded and aria-controls", () => {
     const html = renderFirstUseView()
     const toggleAttrs = getButtonAttributes(html, "❮")
