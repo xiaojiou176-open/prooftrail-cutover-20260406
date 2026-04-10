@@ -1,15 +1,15 @@
-import { memo, useState, type ChangeEvent } from "react"
+import { Badge, Button, Card, CardContent, Input } from "@uiq/ui"
+import { type ChangeEvent, memo, useState } from "react"
 import CommandGrid from "../components/CommandGrid"
 import EmptyState from "../components/EmptyState"
-import { useI18n } from "../i18n"
 import type { ParamsState } from "../components/ParamsPanel"
 import ParamsPanel from "../components/ParamsPanel"
-import { Badge, Button, Card, CardContent, Input } from "@uiq/ui"
 import {
   QUICK_LAUNCH_FIRST_USE_LOCATE_CONFIG_TEST_ID,
   QUICK_LAUNCH_FIRST_USE_START_TEST_ID,
 } from "../constants/testIds"
 import type { FirstUseStage } from "../hooks/useAppStore"
+import { useI18n } from "../i18n"
 import type { Command, CommandCategory, CommandState, UniversalTemplate } from "../types"
 
 interface QuickLaunchViewProps {
@@ -106,9 +106,7 @@ function QuickLaunchView({
                     : t("Templates can be added later")}
                 </Badge>
                 <Badge>
-                  {sidebarCollapsed
-                    ? t("Parameter rail collapsed")
-                    : t("Parameter rail expanded")}
+                  {sidebarCollapsed ? t("Parameter rail collapsed") : t("Parameter rail expanded")}
                 </Badge>
               </div>
             </div>
@@ -166,7 +164,7 @@ function QuickLaunchView({
                     "API-first or hybrid today: Codex, OpenHands, and OpenClaw. Use this as a discovery rule, not as an official-integration claim."
                   )}
                 </p>
-                <div className="launch-hero-fit-list" aria-label={t("Named ecosystem fit matrix")}>
+                <div className="launch-hero-fit-list">
                   <div className="launch-hero-fit-row">
                     <span className="launch-hero-fit-name">{t("Claude Code")}</span>
                     <span className="launch-hero-fit-pill">{t("MCP-first")}</span>
@@ -176,7 +174,9 @@ function QuickLaunchView({
                     <span className="launch-hero-fit-pill">{t("MCP-first")}</span>
                   </div>
                   <div className="launch-hero-fit-row">
-                    <span className="launch-hero-fit-name">{t("Codex / OpenHands / OpenClaw")}</span>
+                    <span className="launch-hero-fit-name">
+                      {t("Codex / OpenHands / OpenClaw")}
+                    </span>
                     <span className="launch-hero-fit-pill">{t("API-first or hybrid")}</span>
                   </div>
                 </div>
@@ -212,11 +212,14 @@ function QuickLaunchView({
                   )}
               </p>
               <p className="text-muted">
-                {t("Progress: configure {config} / trigger a run {run} / review a result {review}", {
-                  config: firstUseProgress.configValid ? "✅" : "⬜",
-                  run: firstUseProgress.runTriggered ? "✅" : "⬜",
-                  review: firstUseProgress.resultSeen ? "✅" : "⬜",
-                })}
+                {t(
+                  "Progress: configure {config} / trigger a run {run} / review a result {review}",
+                  {
+                    config: firstUseProgress.configValid ? "✅" : "⬜",
+                    run: firstUseProgress.runTriggered ? "✅" : "⬜",
+                    review: firstUseProgress.resultSeen ? "✅" : "⬜",
+                  }
+                )}
               </p>
               <div className="form-actions">
                 {firstUseStage === "welcome" && (
@@ -340,6 +343,16 @@ function QuickLaunchView({
                   </div>
                 </li>
               </ol>
+              <div className="field mt-4">
+                <span className="field-label">
+                  {t("Leave this page only when these three things are true")}
+                </span>
+                <span className="hint-text">
+                  {t(
+                    "The parameter rail is valid, one canonical run is already visible, and your next click is to Task Center instead of a side road."
+                  )}
+                </span>
+              </div>
             </CardContent>
           </Card>
           <CommandGrid
@@ -473,7 +486,10 @@ function QuickLaunchView({
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
+                  role="img"
+                  aria-label={t("Create template")}
                 >
+                  <title>{t("Create template")}</title>
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <path d="M12 8v8M8 12h8" />
                 </svg>
@@ -497,8 +513,7 @@ function QuickLaunchView({
             <p className="launch-section-desc">
               {t(
                 "These surfaces matter after you already trust the canonical path. Treat them like specialist tools: visible, useful, and clearly secondary."
-              )}
-              {" "}
+              )}{" "}
               {t(
                 "They also form the strongest bridge for AI-agent builders using Codex, Claude Code, or other tool-using shells who need browser evidence, governed MCP access, and artifact-first reconstruction without turning the product into a generic bot platform."
               )}
@@ -513,8 +528,7 @@ function QuickLaunchView({
               <p className="template-meta">
                 {t(
                   "Use artifact-driven reconstruction only when you need help rebuilding a flow from session evidence. It stays in Flow Workshop and still requires human review."
-                )}
-                {" "}
+                )}{" "}
                 {t(
                   "This is the AI-facing helper surface for builders who already have artifacts and need a reviewable reconstruction lane."
                 )}
@@ -538,8 +552,7 @@ function QuickLaunchView({
               <p className="template-meta">
                 {t(
                   "Use MCP when an external AI client needs to inspect runs, launch workflows, or export proof on top of the existing backend and artifacts. It is not a second backend."
-                )}
-                {" "}
+                )}{" "}
                 {t(
                   "Use it when the agent shell should stay external and ProofTrail should stay the browser-evidence substrate."
                 )}
@@ -570,9 +583,7 @@ function QuickLaunchView({
               size="icon"
               onClick={() => setSidebarCollapsed((v) => !v)}
               aria-label={
-                sidebarCollapsed
-                  ? t("Expand parameter rail")
-                  : t("Collapse parameter rail")
+                sidebarCollapsed ? t("Expand parameter rail") : t("Collapse parameter rail")
               }
               aria-expanded={!sidebarCollapsed}
               aria-controls={paramsPanelId}
