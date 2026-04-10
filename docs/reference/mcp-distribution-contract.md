@@ -1,6 +1,10 @@
 # MCP Distribution Contract
 
 This page is the **registry-facing contract** for the ProofTrail MCP surface.
+It documents a split truth surface: the GHCR container lane is materialized in
+repo, but today its public GitHub Packages surface is **not evidenced as
+listed/live**, while the npm and Official MCP Registry lanes are still only
+publish-ready in repo and not yet accepted upstream.
 
 Use it when you need the shortest truthful summary of:
 
@@ -17,6 +21,7 @@ Use it when you need the shortest truthful summary of:
 | Field | Value |
 | --- | --- |
 | Name | `@prooftrail/mcp-server` |
+| Registry server name | `io.github.xiaojiou176-open/prooftrail-mcp` |
 | Description | `Governed MCP access to ProofTrail runs, proof, and workflows` |
 | Version | `0.1.1` |
 | Homepage | `https://xiaojiou176-open.github.io/prooftrail/` |
@@ -87,18 +92,32 @@ Optional backend token forwarding example:
 Truth boundary:
 
 - local stdio is supported now
+- the GHCR image name
+  `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1` is part of the
+  repo-defined container contract, but today
+  `https://github.com/orgs/xiaojiou176-open/packages/container/package/prooftrail-mcp-server`
+  returns `404` and
+  `https://github.com/orgs/xiaojiou176-open/packages?repo_name=prooftrail`
+  reports `0 packages`
 - backend token forwarding is optional
 - OAuth is not part of the current MCP contract
+- npm and Official MCP Registry are still blocked upstream because
+  `@prooftrail/mcp-server` is not yet published on npm
+- ClawHub is `listed-live`, while OpenHands/extensions is still
+  `review-pending`
 
-## Publish-ready but not yet published
+## Upstream publication split
 
-The following names are reserved as the **publish-ready** package and container
-surfaces for this repository:
+The following names are the publish-facing package and container surfaces for
+this repository:
 
 | Surface | Planned identifier | Current state |
 | --- | --- | --- |
 | npm package | `@prooftrail/mcp-server` | ready / **not published** |
-| Docker image | see future example below | ready / **not published** |
+| Docker image | `ghcr.io/...:0.1.1` | contract only / not public today |
+
+The repo-local registry submission artifact now lives at
+`apps/mcp-server/server.json`.
 
 Future package example (**not usable today**):
 
@@ -113,7 +132,7 @@ Future package example (**not usable today**):
 }
 ```
 
-Future container example (**not usable today**):
+Future container example (**not publicly evidenced today**):
 
 ```json
 {
@@ -137,13 +156,16 @@ Future container example (**not usable today**):
 }
 ```
 
-These examples describe the intended publish-facing contract only.
-
-They must not be described as live install paths until the package/image is
+The package example above still describes an intended publish-facing contract
+only. It must not be described as a live install path until the npm package is
 actually published and read back from the upstream registry.
 
-The future container surface also assumes a mounted ProofTrail checkout (or
-another compatible workspace root), not a standalone hosted MCP endpoint.
+The container example above describes the intended GHCR install shape only. A
+mounted ProofTrail checkout (or another compatible workspace root) is still
+assumed, and it is not a standalone hosted MCP endpoint. Today public read-back
+does **not** confirm a live GitHub Packages page for this image, so Docker must
+not be described as a listed/live public lane here. That also means Docker does
+**not** upgrade the npm package or Official MCP Registry listing to live.
 
 Repo validation command:
 
@@ -154,6 +176,7 @@ pnpm mcp:container:smoke
 ## Supporting docs
 
 - [ProofTrail MCP Server README](../../apps/mcp-server/README.md)
+- [Registry submission artifact](../../apps/mcp-server/server.json)
 - [MCP for Browser Automation](../how-to/mcp-quickstart-1pager.md)
 - [Distribution Status](../../DISTRIBUTION.md)
 - [Integration Boundaries](../../INTEGRATIONS.md)

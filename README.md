@@ -36,6 +36,28 @@ Quick paths:
 - [Integration Boundaries](INTEGRATIONS.md)
 - [ProofTrail MCP Skill](skills/prooftrail-mcp/SKILL.md)
 
+## Current primary lane vs later lanes
+
+If you only need the truthful packet order, keep it this simple:
+
+- **Primary product lane**
+  - canonical run -> retained evidence -> recovery/review
+  - this is the stable repo identity and the default public story
+- **Current public packet order**
+  - `pure_skills > pure_mcp`
+  - the ProofTrail MCP install skill is the cleaner public packet today
+  - `apps/mcp-server/` is the governed MCP side road behind that packet, not a
+    new top-level product identity
+- **Later lanes**
+  - npm package publication
+  - MCP Docker image publication
+  - MCP Registry / skill-registry listing
+  - vendor-specific plugin or official integration claims
+
+Those later lanes can be documented now, but they must stay documented as
+**later / publish-ready / not yet live** until a fresh upstream read-back
+exists.
+
 ![ProofTrail storefront loop](assets/storefront/prooftrail-storefront-loop.gif)
 
 The static storefront hero source still lives at

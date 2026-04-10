@@ -1,6 +1,7 @@
 {
   "name": "@prooftrail/mcp-server",
   "version": "0.1.1",
+  "mcpName": "io.github.xiaojiou176-open/prooftrail-mcp",
   "description": "ProofTrail MCP adapter for governed AI-client access to runs, proof, and workflow operations",
   "homepage": "https://xiaojiou176-open.github.io/prooftrail/",
   "repository": {
@@ -34,7 +35,8 @@
   "files": [
     "dist",
     "README.md",
-    "package.json"
+    "package.json",
+    "server.json"
   ],
   "publishConfig": {
     "access": "public"
