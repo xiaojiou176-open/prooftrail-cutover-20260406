@@ -343,6 +343,16 @@ function QuickLaunchView({
                   </div>
                 </li>
               </ol>
+              <div className="field mt-4">
+                <span className="field-label">
+                  {t("Leave this page only when these three things are true")}
+                </span>
+                <span className="hint-text">
+                  {t(
+                    "The parameter rail is valid, one canonical run is already visible, and your next click is to Task Center instead of a side road."
+                  )}
+                </span>
+              </div>
             </CardContent>
           </Card>
           <CommandGrid
