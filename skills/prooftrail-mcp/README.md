@@ -11,7 +11,8 @@ Use it when you want one portable skill folder that teaches:
 - how to attach the current repo-native stdio MCP server
 - which tool families are safest first
 - what one concrete first-success path looks like
-- what future package, Docker, or listing claims are still out of bounds
+- which package or registry claims are still out of bounds, even though the
+  repo already defines a GHCR Docker image contract
 
 ## What this packet includes
 
@@ -38,10 +39,20 @@ Use it when you want one portable skill folder that teaches:
 - a ClawHub skill page for this packet can be read back live today
 - the OpenHands/extensions lane currently has a fresh external review receipt at
   PR #161, but `review-pending` is still not the same as `listed-live`
-- npm and Docker publication remain documented later lanes and are not live
+- the GHCR Docker image
+  `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1` is part of the
+  repo-defined container contract, but today
+  `https://github.com/orgs/xiaojiou176-open/packages/container/package/prooftrail-mcp-server`
+  returns `404` and
+  `https://github.com/orgs/xiaojiou176-open/packages?repo_name=prooftrail`
+  reports `0 packages`
+- npm is still not published, and Official MCP Registry is still not live
+  because it depends on that missing npm package
 
 ## What this packet must not claim
 
 - no live OpenHands listing without fresh PR/read-back
-- no published npm package or Docker image unless the repo has fresh proof
+- no published npm package claim without fresh proof
+- no claim that a repo-defined Docker contract means Docker-live or
+  registry-live; those are different counters
 - no hosted ProofTrail SaaS or hosted MCP endpoint
