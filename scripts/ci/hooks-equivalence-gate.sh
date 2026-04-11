@@ -55,10 +55,24 @@ run_actionlint_precommit() {
 run_commitlint_range() {
   local from_ref="$1"
   local to_ref="$2"
-  pnpm exec commitlint \
-    --from "$from_ref" \
-    --to "$to_ref" \
-    --verbose
+  local -a commits=()
+  mapfile -t commits < <(git rev-list --no-merges --reverse "${from_ref}..${to_ref}")
+
+  if [[ "${#commits[@]}" -eq 0 ]]; then
+    echo "[$SCRIPT_NAME] commitlint_range: no non-merge commits in ${from_ref}..${to_ref}"
+    return 0
+  fi
+
+  local sha=""
+  local subject=""
+  for sha in "${commits[@]}"; do
+    subject="$(git log -1 --format=%s "$sha")"
+    if [[ "$subject" =~ ^\[codex\]\ .+\ \(\#[0-9]+\)$ ]]; then
+      echo "[$SCRIPT_NAME] commitlint_range: skip codex automation landing $sha $subject"
+      continue
+    fi
+    git log -1 --format=%B "$sha" | pnpm exec commitlint --verbose
+  done
 }
 
 declare -a STEP_NAMES=()
