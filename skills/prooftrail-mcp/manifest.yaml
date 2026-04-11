@@ -10,18 +10,19 @@ registry_targets:
   clawhub:
     status: listed-live
     package_shape: skill-folder
-    listing_url: https://www.clawhub.ai/skills/prooftrail-mcp
-    note: Fresh 2026-04-08 America/Los_Angeles read-back confirmed this listing is live.
+    listing_url: https://clawhub.ai/skills/prooftrail-mcp
+    note: Fresh 2026-04-08 America/Los_Angeles read-back confirmed this live ClawHub discovery page for the repo-owned skill folder.
     submit_via: clawhub publish . --slug prooftrail-mcp --name "ProofTrail MCP Skill" --version 0.1.1 --tags browser-evidence,mcp,recovery,prooftrail
   openhands-extensions:
     status: review-pending
     package_shape: skill-folder
     submission_url: https://github.com/OpenHands/extensions/pull/161
-    note: Fresh read-back confirms PR #161 is open; treat this as external review receipt, not a live listing.
+    note: Fresh read-back confirms PR #161 is open; treat this as a separate external review receipt, not a live listing.
     submit_via: submit this folder as skills/prooftrail-mcp/ in OpenHands/extensions
 surfaces:
   - repo-native MCP package
   - repo-owned install skill
+  - ClawHub live discovery page
   - publish-ready Docker surface
 supported_shells:
   - Codex
@@ -32,7 +33,7 @@ supported_shells:
 install_modes:
   - local-checkout-stdio
   - host-native-folder-import
-official_listing_state: clawhub-live-openhands-review-pending
+official_listing_state: clawhub-skill-page-live; generic-skill-registry-unpublished; openhands-review-pending
 docs:
   - apps/mcp-server/README.md
   - docs/how-to/mcp-quickstart-1pager.md
@@ -42,6 +43,7 @@ docs:
 limitations:
   - not an official plugin
   - not a hosted service
+  - no generic cross-host skill-registry listing yet
   - no live OpenHands/extensions listing yet
 pair_with:
   - SKILL.md
