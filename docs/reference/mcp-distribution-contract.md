@@ -1,10 +1,10 @@
 # MCP Distribution Contract
 
 This page is the **registry-facing contract** for the ProofTrail MCP surface.
-It documents a split truth surface: the GHCR container lane is materialized in
-repo, but today its public GitHub Packages surface is **not evidenced as
-listed/live**, while the npm and Official MCP Registry lanes are still only
-publish-ready in repo and not yet accepted upstream.
+It documents four separate truth lanes: local stdio works now; the ClawHub
+skill page is live as a public discovery page for the repo-owned skill packet;
+the OpenHands/extensions lane is still `review-pending`; and the npm, Official
+MCP Registry, and GHCR lanes are still unpublished or contract-only upstream.
 
 Use it when you need the shortest truthful summary of:
 
@@ -92,6 +92,10 @@ Optional backend token forwarding example:
 Truth boundary:
 
 - local stdio is supported now
+- the ClawHub skill page is `listed-live`, but only as a public discovery page
+  for the repo-owned skill packet
+- the repo-owned skill packet is separate from generic cross-host
+  skill-registry publication
 - the GHCR image name
   `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1` is part of the
   repo-defined container contract, but today
@@ -103,18 +107,28 @@ Truth boundary:
 - OAuth is not part of the current MCP contract
 - npm and Official MCP Registry are still blocked upstream because
   `@prooftrail/mcp-server` is not yet published on npm
-- ClawHub is `listed-live`, while OpenHands/extensions is still
-  `review-pending`
+- OpenHands/extensions is still `review-pending`, not a live listing
 
 ## Upstream publication split
 
-The following names are the publish-facing package and container surfaces for
-this repository:
+The following names are the current discovery, review, package, and container
+surfaces for this repository:
 
-| Surface | Planned identifier | Current state |
-| --- | --- | --- |
-| npm package | `@prooftrail/mcp-server` | ready / **not published** |
-| Docker image | `ghcr.io/...:0.1.1` | contract only / not public today |
+- ClawHub skill page
+  - identifier: `https://clawhub.ai/skills/prooftrail-mcp`
+  - current state: listed-live packet discovery page
+- Repo-owned skill packet
+  - identifier: `skills/prooftrail-mcp/`
+  - current state: materialized in repo / generic registry not evidenced
+- OpenHands/extensions lane
+  - identifier: `OpenHands/extensions#161`
+  - current state: review-pending / not live
+- npm package
+  - identifier: `@prooftrail/mcp-server`
+  - current state: ready / **not published**
+- Docker image
+  - identifier: `ghcr.io/...:0.1.1`
+  - current state: contract only / not public today
 
 The repo-local registry submission artifact now lives at
 `apps/mcp-server/server.json`.
@@ -166,6 +180,10 @@ assumed, and it is not a standalone hosted MCP endpoint. Today public read-back
 does **not** confirm a live GitHub Packages page for this image, so Docker must
 not be described as a listed/live public lane here. That also means Docker does
 **not** upgrade the npm package or Official MCP Registry listing to live.
+
+The live ClawHub page above does **not** upgrade the npm package, Official MCP
+Registry, or GHCR lane to live either. It is a separate skill-page lane for the
+repo-owned packet.
 
 Repo validation command:
 

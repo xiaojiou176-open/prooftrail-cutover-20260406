@@ -82,6 +82,20 @@ Protocol and auth truth:
 
 - auth = `local-with-optional-backend-token`
 
+## Live public discovery lane
+
+- the ClawHub page at `https://clawhub.ai/skills/prooftrail-mcp` is live
+- that page is a public discovery page for this repo-owned skill packet
+- it does **not** turn ProofTrail into a hosted MCP endpoint, official plugin,
+  or generic cross-host skill-registry publication
+
+## Repo-owned packet and review lanes
+
+- this skill folder is the repo-owned install packet
+- the OpenHands/extensions submission stays separate and is still
+  `review-pending`
+- no generic cross-host skill-registry publication is evidenced today
+
 ## Publish-ready but not yet published
 
 The following install surfaces are planned and not yet published:

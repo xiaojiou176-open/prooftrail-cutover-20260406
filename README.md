@@ -43,19 +43,25 @@ If you only need the truthful packet order, keep it this simple:
 - **Primary product lane**
   - canonical run -> retained evidence -> recovery/review
   - this is the stable repo identity and the default public story
-- **Current public packet order**
-  - `pure_skills > pure_mcp`
-  - the ProofTrail MCP install skill is the cleaner public packet today
-  - `apps/mcp-server/` is the governed MCP side road behind that packet, not a
+- **Current MCP lane that works now**
+  - local checkout + stdio through `pnpm mcp:start`
+  - `apps/mcp-server/` is the governed MCP side road for that local lane, not a
     new top-level product identity
-- **Later lanes**
+- **Current public skill/discovery lanes**
+  - the ClawHub skill page is live as a public discovery page for the
+    repo-owned ProofTrail MCP skill packet
+  - the repo-owned skill packet under `skills/prooftrail-mcp/` is materialized
+    here, but no generic cross-host skill-registry publication is evidenced yet
+  - the OpenHands/extensions submission is a separate `review-pending` lane,
+    not a live listing
+- **Later / contract-only lanes**
   - npm package publication
   - MCP Docker image publication
-  - MCP Registry / skill-registry listing
+  - Official MCP Registry listing
   - vendor-specific plugin or official integration claims
 
 Those later lanes can be documented now, but they must stay documented as
-**later / publish-ready / not yet live** until a fresh upstream read-back
+**later / contract-only / not yet live** until a fresh upstream read-back
 exists.
 
 ![ProofTrail storefront loop](assets/storefront/prooftrail-storefront-loop.gif)
@@ -118,16 +124,27 @@ generated helper**, not a published SDK package.
 
 ## MCP Install Surfaces
 
-Use these two layers to avoid overclaiming what is available today.
+Use these four layers to avoid mixing a working local install with public
+discovery pages or unpublished package contracts.
 
-- **Current / usable today**:
-  local checkout + stdio through `pnpm mcp:start`, with optional
-  `UIQ_MCP_API_BASE_URL` / `UIQ_MCP_AUTOMATION_TOKEN` when you want the MCP
-  process to call a live backend.
-- **Publish-ready but not yet published**:
-  `@prooftrail/mcp-server`, the ProofTrail MCP install skill, and the
-  dedicated MCP Docker image contract described in
-  [docs/reference/mcp-distribution-contract.md](docs/reference/mcp-distribution-contract.md).
+- **Current / usable now**
+  - local checkout + stdio through `pnpm mcp:start`
+  - optional `UIQ_MCP_API_BASE_URL` / `UIQ_MCP_AUTOMATION_TOKEN` when you want
+    the MCP process to call a live backend
+- **Live public skill page**
+  - the ClawHub ProofTrail MCP page is live as a discovery surface for the
+    skill packet
+  - that page does **not** turn ProofTrail into a hosted endpoint, official
+    plugin, or generic skill-registry publication
+- **Repo-owned skill packet and review lanes**
+  - `skills/prooftrail-mcp/` is the repo-owned install skill packet
+  - OpenHands/extensions is still `review-pending`
+  - no generic cross-host skill-registry listing is evidenced yet
+- **Contract-only later lanes**
+  - npm package: `@prooftrail/mcp-server`
+  - Docker image: `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1`
+  - Official MCP Registry stays blocked until the npm package is actually
+    published
 
 Those future-facing names are part of the public contract now, but they are
 **not** live install paths until the package/image is actually published.
