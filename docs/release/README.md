@@ -9,6 +9,8 @@ This page sits after the first evaluation path, not before it. If you still
 need the product/category story, start with [README.md](../../README.md). If
 you need the evidence/recovery story first, start with
 [docs/reference/run-evidence-example.md](../reference/run-evidence-example.md).
+If you need the publication-lane receipts themselves, start with
+[publication-receipt-bundle.md](./publication-receipt-bundle.md).
 
 For the current active mainline, "proof" means the canonical run artifacts
 written by `just run`: `manifest.json`, `reports/summary.json`,
@@ -70,7 +72,8 @@ order:
 Use:
 
 ```bash
-node --import tsx scripts/release/generate-promotion-candidate.mts <runId> [compareRunId] [candidate|review|approved]
+node --import tsx scripts/release/generate-promotion-candidate.mts \
+  <runId> [compareRunId] [candidate|review|approved]
 ```
 
 This emits the release-facing promotion metadata under
@@ -87,7 +90,8 @@ That means the release-facing order should stay:
 1. explain the run
 2. package the share pack
 3. compare against a retained baseline when needed
-4. build or inspect the review workspace packet when you want one maintainer-ready surface
+4. build or inspect the review workspace packet when you want one
+   maintainer-ready surface
 5. only then cite the promotion candidate
 
 If you want that maintainer-ready packet, use the API review workspace seed:

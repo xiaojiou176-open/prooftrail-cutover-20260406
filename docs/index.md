@@ -35,6 +35,7 @@ The first-run UI lane stays intentionally strict:
 - [docs/showcase/minimal-success-case.md](showcase/minimal-success-case.md)
 - [docs/reference/run-evidence-example.md](reference/run-evidence-example.md)
 - [docs/release/README.md](release/README.md)
+- [docs/release/publication-receipt-bundle.md](release/publication-receipt-bundle.md)
 
 ## Growth Matrix
 
@@ -106,6 +107,7 @@ the deepest current evidence/recovery/review loop.
 ## Distribution And Integration Status
 
 - [DISTRIBUTION.md](../DISTRIBUTION.md)
+- [docs/release/publication-receipt-bundle.md](release/publication-receipt-bundle.md)
 - [INTEGRATIONS.md](../INTEGRATIONS.md)
 
 ## Coding-Agent And Agent-Stack Search Path

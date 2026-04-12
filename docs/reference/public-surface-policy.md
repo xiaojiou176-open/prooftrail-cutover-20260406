@@ -22,6 +22,8 @@ Supporting truth surfaces that do not act as storefront claims:
 
 - `DISTRIBUTION.md` for current distribution and publication status
 - `INTEGRATIONS.md` for official-vs-repo-native integration boundaries
+- `docs/release/publication-receipt-bundle.md` for live receipts vs review
+  receipts vs contract-only later lanes
 - `docs/reference/mcp-distribution-contract.md` for the MCP package/install contract
 - `skills/prooftrail-mcp/SKILL.md` for the generic install skill
   consumed by agent shells

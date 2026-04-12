@@ -51,6 +51,18 @@ It does **not** mean that npm, PyPI, Official MCP Registry, generic skill
 registry publication, or the GHCR public package surface are already live just
 because the repo carries a Docker image contract or a live ClawHub skill page.
 
+## Publication Receipt Bundle
+
+If you need the shortest receipt-first map for the next heavy lane, open
+[docs/release/publication-receipt-bundle.md](docs/release/publication-receipt-bundle.md).
+
+That page separates:
+
+- live release/storefront receipts
+- live packet-discovery receipts
+- review-pending submission receipts
+- contract-only later lanes
+
 ## Intentionally Deferred
 
 These remain outside the current repo-side closeout scope:

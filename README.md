@@ -32,6 +32,7 @@ Quick paths:
 - [ProofTrail for Coding Agents and Agent Ecosystems](docs/how-to/prooftrail-for-coding-agents.md)
 - [API Builder Quickstart](docs/how-to/api-builder-quickstart.md)
 - [MCP Distribution Contract](docs/reference/mcp-distribution-contract.md)
+- [Publication Receipt Bundle](docs/release/publication-receipt-bundle.md)
 - [Distribution Status](DISTRIBUTION.md)
 - [Integration Boundaries](INTEGRATIONS.md)
 - [ProofTrail MCP Skill](skills/prooftrail-mcp/SKILL.md)
