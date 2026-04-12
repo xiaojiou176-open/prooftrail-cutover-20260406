@@ -21,7 +21,8 @@ It separates:
     `xiaojiou176` account.
 - `Cline MCP Marketplace`
   - status: `review-pending` after issue creation
-  - receipt: see the live issue receipt once created
+  - receipt:
+    `https://github.com/cline/mcp-marketplace/issues/1322`
 - `mcpservers.org`
   - status: `owner-manual-ready`
   - note: public form packet below is complete enough for owner submit
