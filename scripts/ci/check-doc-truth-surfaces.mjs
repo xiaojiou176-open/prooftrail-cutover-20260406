@@ -22,6 +22,7 @@ const allowedDocs = new Set([
   "docs/how-to/prooftrail-for-ai-agents.md",
   "docs/how-to/template-exchange-mvp.md",
   "docs/release/README.md",
+  "docs/release/publication-receipt-bundle.md",
   "docs/assets/README.md",
   "docs/archive/README.md",
   "docs/quality-gates.md",
