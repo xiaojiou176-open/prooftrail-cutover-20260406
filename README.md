@@ -53,8 +53,10 @@ If you only need the truthful packet order, keep it this simple:
     repo-owned ProofTrail MCP skill packet
   - the repo-owned skill packet under `skills/prooftrail-mcp/` is materialized
     here, but no generic cross-host skill-registry publication is evidenced yet
-  - the OpenHands/extensions submission is a separate `review-pending` lane,
-    not a live listing
+  - Goose `#26`, agent-skill.co `#182`, and awesome-opencode `#275` are now
+    separate upstream review lanes, not live listings
+  - the OpenHands/extensions submission is now a closed historical receipt,
+    not a live listing or active review lane
 - **Later / contract-only lanes**
   - npm package publication
   - MCP Docker image publication
@@ -139,7 +141,10 @@ discovery pages or unpublished package contracts.
     plugin, or generic skill-registry publication
 - **Repo-owned skill packet and review lanes**
   - `skills/prooftrail-mcp/` is the repo-owned install skill packet
-  - OpenHands/extensions is still `review-pending`
+  - Goose `#26`, agent-skill.co `#182`, and awesome-opencode `#275` are the
+    current active upstream review lanes
+  - OpenHands/extensions is closed-not-accepted and no longer an active review
+    lane
   - no generic cross-host skill-registry listing is evidenced yet
 - **Contract-only later lanes**
   - npm package: `@prooftrail/mcp-server`

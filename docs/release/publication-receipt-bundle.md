@@ -57,12 +57,49 @@ ticket, and some are still packed but have not left the warehouse.
 - strongest current receipt:
   - PR receipt
 - current status:
-  - `review-pending`
+  - `closed-not-accepted`
 - repo-owned source of truth:
   - `skills/prooftrail-mcp/README.md`
   - `docs/reference/mcp-distribution-contract.md`
 - what this receipt does not prove:
   - a live listing
+  - an active upstream review queue
+
+### Goose Skills Marketplace
+
+- strongest current receipt:
+  - `https://github.com/block/agent-skills/pull/26`
+- current status:
+  - `review-pending`
+- repo-owned source of truth:
+  - `skills/prooftrail-mcp/README.md`
+  - `skills/prooftrail-mcp/SKILL.md`
+- what this receipt does not prove:
+  - a listed-live marketplace entry
+
+### Agent Skill Index
+
+- strongest current receipt:
+  - `https://github.com/heilcheng/awesome-agent-skills/pull/182`
+- current status:
+  - `review-pending`
+- repo-owned source of truth:
+  - `skills/prooftrail-mcp/README.md`
+  - `skills/prooftrail-mcp/SKILL.md`
+- what this receipt does not prove:
+  - a listed-live directory entry
+
+### awesome-opencode project entry
+
+- strongest current receipt:
+  - `https://github.com/awesome-opencode/awesome-opencode/pull/275`
+- current status:
+  - `review-pending`
+- repo-owned source of truth:
+  - `README.md`
+  - `docs/release/publication-receipt-bundle.md`
+- what this receipt does not prove:
+  - an accepted or listed-live project entry
 
 ### npm package `@prooftrail/mcp-server`
 

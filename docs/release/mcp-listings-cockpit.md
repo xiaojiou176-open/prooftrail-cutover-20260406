@@ -23,6 +23,12 @@ It separates:
   - status: `review-pending` after issue creation
   - receipt:
     `https://github.com/cline/mcp-marketplace/issues/1322`
+- `OpenHands/extensions`
+  - status: `closed-not-accepted`
+  - receipt:
+    `https://github.com/OpenHands/extensions/pull/161`
+  - exact blocker: maintainer closed the upstream lane and pointed contributors
+    to a custom `marketplace.json` distribution alternative
 - `mcpservers.org`
   - status: `owner-manual-ready`
   - note: public form packet below is complete enough for owner submit

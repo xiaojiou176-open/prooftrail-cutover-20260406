@@ -28,8 +28,11 @@ Use it when you want one portable skill folder that teaches:
 
 ## Best-fit hosts
 
-- OpenHands/extensions contribution flow
 - ClawHub-style skill publication
+- Goose Skills Marketplace contribution flow
+- agent-skill.co source-repo index entry
+- awesome-opencode project-entry flow anchored by the repo front door
+- OpenHands/extensions contribution flow only as a closed historical receipt
 - repo-local skill import flows that expect one standalone folder with install,
   capability, and demo notes
 
@@ -37,8 +40,15 @@ Use it when you want one portable skill folder that teaches:
 
 - the repo-owned packet is complete as a portable MCP-aware skill folder
 - a ClawHub skill page for this packet can be read back live today
-- the OpenHands/extensions lane currently has a fresh external review receipt at
-  PR #161, but `review-pending` is still not the same as `listed-live`
+- the Goose Skills Marketplace lane now has a fresh external review receipt at
+  PR #26
+- the agent-skill.co source-repo lane now has a fresh external review receipt
+  at PR #182
+- the awesome-opencode project-entry lane now has a fresh external review
+  receipt at PR #275
+- the OpenHands/extensions lane is now a closed historical receipt at PR #161;
+  it is not `review-pending`, and the maintainer pointed contributors to a
+  custom `marketplace.json` distribution instead
 - the GHCR Docker image
   `ghcr.io/xiaojiou176-open/prooftrail-mcp-server:0.1.1` is part of the
   repo-defined container contract, but today
@@ -51,7 +61,9 @@ Use it when you want one portable skill folder that teaches:
 
 ## What this packet must not claim
 
-- no live OpenHands listing without fresh PR/read-back
+- no listed-live Goose, agent-skill.co, or awesome-opencode entry without fresh
+  read-back
+- no live OpenHands listing; that lane was closed rather than accepted
 - no published npm package claim without fresh proof
 - no claim that a repo-defined Docker contract means Docker-live or
   registry-live; those are different counters

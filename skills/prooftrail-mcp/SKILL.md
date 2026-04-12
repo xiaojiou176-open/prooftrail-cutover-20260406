@@ -1,7 +1,14 @@
 ---
 name: prooftrail-mcp
 description: Teach an agent to install ProofTrail's governed stdio MCP server, use the safest read and proof tools first, and keep future package or listing claims honest.
-version: 0.1.1
+author: xiaojiou176
+version: "0.1.1"
+tags:
+  - mcp
+  - browser-evidence
+  - recovery
+  - prooftrail
+  - local-first
 triggers:
   - prooftrail
   - prooftrail mcp
@@ -92,8 +99,14 @@ Protocol and auth truth:
 ## Repo-owned packet and review lanes
 
 - this skill folder is the repo-owned install packet
-- the OpenHands/extensions submission stays separate and is still
-  `review-pending`
+- Goose now has a live review receipt at
+  `https://github.com/block/agent-skills/pull/26`
+- agent-skill.co now has a live review receipt at
+  `https://github.com/heilcheng/awesome-agent-skills/pull/182`
+- awesome-opencode now has a live project-entry review receipt at
+  `https://github.com/awesome-opencode/awesome-opencode/pull/275`
+- the OpenHands/extensions submission is now a closed historical receipt, not
+  a current review lane
 - no generic cross-host skill-registry publication is evidenced today
 
 ## Publish-ready but not yet published
@@ -122,6 +135,8 @@ published.
 - this packet may appear as a live ClawHub skill page, but that does not turn
   ProofTrail into an official plugin or hosted MCP endpoint
 - this packet does not claim a live OpenHands/extensions listing
+- this packet does not claim a live Goose, agent-skill.co, or awesome-opencode
+  listing without fresh read-back
 - future npm or Docker shapes are publish-ready but not yet published
 
 ## Local references

@@ -3,7 +3,8 @@
 This page is the **registry-facing contract** for the ProofTrail MCP surface.
 It documents four separate truth lanes: local stdio works now; the ClawHub
 skill page is live as a public discovery page for the repo-owned skill packet;
-the OpenHands/extensions lane is still `review-pending`; and the npm, Official
+Goose `#26` and agent-skill.co `#182` are active upstream review lanes; the
+OpenHands/extensions lane is closed-not-accepted; and the npm, Official
 MCP Registry, and GHCR lanes are still unpublished or contract-only upstream.
 
 Use it when you need the shortest truthful summary of:
@@ -107,7 +108,8 @@ Truth boundary:
 - OAuth is not part of the current MCP contract
 - npm and Official MCP Registry are still blocked upstream because
   `@prooftrail/mcp-server` is not yet published on npm
-- OpenHands/extensions is still `review-pending`, not a live listing
+- Goose and agent-skill.co are `review-pending`, not live listings
+- OpenHands/extensions is `closed-not-accepted`, not a live listing
 
 ## Upstream publication split
 
@@ -122,6 +124,12 @@ surfaces for this repository:
   - current state: materialized in repo / generic registry not evidenced
 - OpenHands/extensions lane
   - identifier: `OpenHands/extensions#161`
+  - current state: closed-not-accepted / not live
+- Goose Skills Marketplace lane
+  - identifier: `block/Agent-Skills#26`
+  - current state: review-pending / not live
+- agent-skill.co source repo lane
+  - identifier: `heilcheng/awesome-agent-skills#182`
   - current state: review-pending / not live
 - npm package
   - identifier: `@prooftrail/mcp-server`
