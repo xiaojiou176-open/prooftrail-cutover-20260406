@@ -81,7 +81,7 @@ assert_no_matches_outside_allowlist \
   'osascript' \
   "packages/orchestrator/src/commands/desktop.ts"
 
-if rg -n '\b(pkill -f|kill -9 -)\b' packages/orchestrator/src scripts apps README.md docs .github -g '!node_modules' -g '!scripts/ci/host-safety-gate.sh' >/dev/null; then
+if rg -n 'killpg\s*\(|\b(pkill -f|kill -9 -)\b' packages/orchestrator/src scripts apps README.md docs .github -g '!node_modules' -g '!scripts/ci/host-safety-gate.sh' >/dev/null; then
   fail "found forbidden broad or forceful host-process termination primitive"
 fi
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import signal
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -167,14 +168,16 @@ def test_automation_service_timeout_terminate_and_idempotency_cleanup_paths(
 
     signals: list[tuple[int, int]] = []
     monkeypatch.setattr(
-        "apps.api.app.services.automation_service.os.killpg",
+        "apps.api.app.services.automation_service.os.kill",
         lambda pid, sig: signals.append((pid, sig)),
     )
 
     class GroupProcess:
-        def __init__(self, waits: list[object]) -> None:
-            self.pid = 321
+        def __init__(self, waits: list[object], pid: int = 321) -> None:
+            self.pid = pid
             self._waits = list(waits)
+            self.terminated = False
+            self.killed = False
 
         def wait(self, timeout: float | None = None) -> int:
             _ = timeout
@@ -186,17 +189,28 @@ def test_automation_service_timeout_terminate_and_idempotency_cleanup_paths(
             return result
 
         def terminate(self) -> None:
-            return None
+            self.terminated = True
 
         def kill(self) -> None:
-            return None
+            self.killed = True
 
-    assert automation_service._terminate_process(GroupProcess([0]), timeout_seconds=0.01) is False
+    graceful = GroupProcess([0])
+    assert automation_service._terminate_process(graceful, timeout_seconds=0.01) is False
+    assert graceful.terminated is False
+    assert graceful.killed is False
+
+    force_killed = GroupProcess([subprocess.TimeoutExpired(cmd="x", timeout=0.01), 0])
     assert automation_service._terminate_process(
-        GroupProcess([subprocess.TimeoutExpired(cmd="x", timeout=0.01), 0]),
+        force_killed,
         timeout_seconds=0.01,
     ) is True
-    assert [signal for _, signal in signals]
+    assert force_killed.terminated is False
+    assert force_killed.killed is False
+    assert signals == [
+        (321, signal.SIGTERM),
+        (321, signal.SIGTERM),
+        (321, signal.SIGKILL),
+    ]
 
     now = datetime.now(timezone.utc)
     with automation_service._lock:

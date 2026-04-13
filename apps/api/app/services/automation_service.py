@@ -530,6 +530,22 @@ class AutomationService:
             return pid
         return None
 
+    @staticmethod
+    def _signal_owned_child_pid(pid: int, sig: signal.Signals) -> bool:
+        if not isinstance(pid, int) or pid <= 0:
+            return False
+        try:
+            os.kill(pid, sig)
+            return True
+        except ProcessLookupError:
+            return False
+        except OSError as error:
+            logger.warning(
+                "failed to send signal to owned child process",
+                extra={"error": str(error), "pid": pid, "signal": sig.name},
+            )
+            return False
+
     def _enforce_timeout(
         self, task_id: str, process: subprocess.Popen[str], timeout_seconds: int
     ) -> None:
@@ -616,36 +632,12 @@ class AutomationService:
                     )
                     return False
         try:
-            try:
-                os.killpg(pid, signal.SIGTERM)
-            except ProcessLookupError:
-                return False
-            except OSError:
-                process.terminate()
-            except ProcessLookupError:
-                return False
-            except OSError as error:
-                logger.warning(
-                    "failed to send SIGTERM to process",
-                    extra={"error": str(error), "pid": pid},
-                )
+            if not self._signal_owned_child_pid(pid, signal.SIGTERM):
                 return False
             process.wait(timeout=timeout_seconds)
             return False
         except subprocess.TimeoutExpired:
-            try:
-                os.killpg(pid, signal.SIGKILL)
-            except ProcessLookupError:
-                return False
-            except OSError:
-                process.kill()
-            except ProcessLookupError:
-                return False
-            except OSError as error:
-                logger.warning(
-                    "failed to send SIGKILL to process",
-                    extra={"error": str(error), "pid": pid},
-                )
+            if not self._signal_owned_child_pid(pid, signal.SIGKILL):
                 return False
             try:
                 process.wait(timeout=timeout_seconds)
