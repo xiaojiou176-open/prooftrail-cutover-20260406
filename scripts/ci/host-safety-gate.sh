@@ -71,23 +71,14 @@ assert_contains "$NIGHTLY_WORKFLOW" "UIQ_DESKTOP_AUTOMATION_REASON:"
 
 assert_no_matches_outside_allowlist \
   'killall' \
-  "packages/orchestrator/src/commands/desktop-lifecycle.ts" \
-  "packages/orchestrator/src/commands/desktop-e2e.ts" \
-  "packages/orchestrator/src/commands/desktop-soak.ts"
+  "packages/orchestrator/src/commands/desktop-operator-manual.ts"
 
 assert_no_matches_outside_allowlist \
   'System Events' \
-  "packages/orchestrator/src/commands/desktop-business.ts" \
-  "packages/orchestrator/src/commands/desktop-e2e.ts" \
-  "packages/orchestrator/src/commands/desktop-utils.ts"
+  "packages/orchestrator/src/commands/desktop-operator-manual.ts"
 
 assert_no_matches_outside_allowlist \
   'osascript' \
-  "packages/orchestrator/src/commands/desktop-lifecycle.ts" \
-  "packages/orchestrator/src/commands/desktop-business.ts" \
-  "packages/orchestrator/src/commands/desktop-e2e.ts" \
-  "packages/orchestrator/src/commands/desktop-soak.ts" \
-  "packages/orchestrator/src/commands/desktop-utils.ts" \
   "packages/orchestrator/src/commands/desktop.ts"
 
 if rg -n '\b(pkill -f|kill -9 -)\b' packages/orchestrator/src scripts apps README.md docs .github -g '!node_modules' -g '!scripts/ci/host-safety-gate.sh' >/dev/null; then

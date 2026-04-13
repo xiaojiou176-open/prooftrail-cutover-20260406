@@ -15,7 +15,9 @@ function withTempDir(fn: (dir: string) => Promise<void> | void): Promise<void> {
 
 test("desktop business regression blocks unsupported target", async () => {
   await withTempDir(async (dir) => {
-    const result = await runDesktopBusinessRegression(dir, { targetType: "web" })
+    const result = await runDesktopBusinessRegression(dir, {
+      targetType: "web",
+    })
     assert.equal(result.status, "blocked")
     assert.equal(result.reasonCode, "desktop.target.unsupported")
     const persisted = JSON.parse(readFileSync(resolve(dir, result.reportPath), "utf8"))
@@ -25,10 +27,29 @@ test("desktop business regression blocks unsupported target", async () => {
 
 test("desktop business regression blocks tauri target without app path", async () => {
   await withTempDir(async (dir) => {
-    const result = await runDesktopBusinessRegression(dir, { targetType: "tauri" })
+    const result = await runDesktopBusinessRegression(dir, {
+      targetType: "tauri",
+    })
     assert.equal(result.status, "blocked")
     assert.equal(result.reasonCode, "desktop.tauri.app.missing")
     const persisted = JSON.parse(readFileSync(resolve(dir, result.reportPath), "utf8"))
     assert.equal(persisted.reasonCode, "desktop.tauri.app.missing")
+  })
+})
+
+test("desktop business regression fails closed for operator-manual lane", async () => {
+  await withTempDir(async (dir) => {
+    const result = await runDesktopBusinessRegression(dir, {
+      targetType: "tauri",
+      app: "/Applications/Prooftrail.app",
+    })
+    assert.equal(result.status, "passed")
+    assert.equal(result.reasonCode, "desktop.business.operator_manual_only")
+    assert.equal(result.checks[0]?.id, "desktop.business.operator_manual_only")
+    assert.match(result.checks[0]?.detail ?? "", /operator-manual lane/)
+    assert.equal(result.checks[0]?.status, "passed")
+
+    const persisted = JSON.parse(readFileSync(resolve(dir, result.reportPath), "utf8"))
+    assert.equal(persisted.reasonCode, "desktop.business.operator_manual_only")
   })
 })

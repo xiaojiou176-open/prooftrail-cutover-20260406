@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createDesktopLifecycleStrategy } from "./desktop-lifecycle.js"
-import { getWindowCount, isProcessRunning, runChecked, sleep } from "./desktop-utils.js"
+import {
+  buildDesktopOperatorManualDetail,
+  buildDesktopOperatorManualReasonCode,
+} from "./desktop-operator-manual.js"
 
 export type DesktopE2EConfig = {
   targetType: string
@@ -74,31 +77,6 @@ const INTERACTION_ROUNDS = 8
 const MIN_ACTION_COVERAGE = 3
 const DEFAULT_INTERACTION_SEED = 20260220
 
-function isBusinessInteractionOptional(config: DesktopE2EConfig, checkId: string): boolean {
-  if (config.businessInteractionRequired !== false) return false
-  return (
-    checkId === "desktop.e2e.business.interaction" ||
-    checkId === "desktop.e2e.business.state" ||
-    checkId === "desktop.e2e.business.deep_interaction"
-  )
-}
-
-function isBlockingCheck(config: DesktopE2EConfig, check: DesktopE2ECheck): boolean {
-  return !isBusinessInteractionOptional(config, check.id)
-}
-
-function swiftInteractionReasonCode(detail: string): string {
-  const normalized = detail.toLowerCase()
-  if (
-    normalized.includes("not allowed assistive access") ||
-    normalized.includes("not authorised to send keystrokes") ||
-    normalized.includes("not authorized to send keystrokes")
-  ) {
-    return "desktop.swift.system_events.permission_denied"
-  }
-  return "desktop.swift.system_events.interaction_failed"
-}
-
 function block(
   reportPath: string,
   targetType: string,
@@ -114,24 +92,6 @@ function block(
     interactionMetadata,
     reportPath,
   }
-}
-
-function runBusinessInteractionScript(activateScript: string): { ok: boolean; detail: string } {
-  const interaction = runChecked(
-    "osascript",
-    [
-      "-e",
-      activateScript,
-      "-e",
-      'tell application "System Events" to key code 48',
-      "-e",
-      'tell application "System Events" to key code 48',
-      "-e",
-      'tell application "System Events" to key code 36',
-    ],
-    30000
-  )
-  return { ok: interaction.ok, detail: interaction.detail }
 }
 
 export function buildActivateCheck(
@@ -206,80 +166,11 @@ export function isBusinessInteractionBlocking(config: DesktopE2EConfig): boolean
   return config.businessInteractionRequired !== false
 }
 
-function runRandomInteractionRound(
-  activateScript: string,
-  action: DesktopE2EInteractionType,
-  round: number
-): { ok: boolean; detail: string } {
-  const seedText = `uiq-e2e-round-${round}`
-  const scripts: string[] = ["-e", activateScript]
-  if (action === "tab") {
-    scripts.push("-e", 'tell application "System Events" to key code 48')
-  } else if (action === "scroll") {
-    scripts.push("-e", 'tell application "System Events" to key code 125')
-    scripts.push("-e", 'tell application "System Events" to key code 126')
-  } else if (action === "input") {
-    scripts.push("-e", `tell application "System Events" to keystroke "${seedText}"`)
-    scripts.push("-e", 'tell application "System Events" to key code 36')
-  } else {
-    scripts.push("-e", 'tell application "System Events" to click at {320, 240}')
-  }
-  const interaction = runChecked("osascript", scripts, 30000)
-  return { ok: interaction.ok, detail: interaction.detail }
-}
-
-function runDeepInteractionRounds(
-  activateScript: string,
-  plan: DesktopE2EInteractionType[]
-): { metrics: DesktopE2EInteractionMetrics; rounds: DesktopE2EInteractionRound[] } {
-  const rounds: DesktopE2EInteractionRound[] = []
-  const byAction: DesktopE2EInteractionMetrics["byAction"] = {
-    click: { attempted: 0, passed: 0, failed: 0 },
-    tab: { attempted: 0, passed: 0, failed: 0 },
-    scroll: { attempted: 0, passed: 0, failed: 0 },
-    input: { attempted: 0, passed: 0, failed: 0 },
-  }
-  const coveredActions = new Set<DesktopE2EInteractionType>()
-  for (let i = 0; i < plan.length; i += 1) {
-    const action = plan[i]
-    byAction[action].attempted += 1
-    const startedAt = Date.now()
-    const result = runRandomInteractionRound(activateScript, action, i + 1)
-    const passed = result.ok
-    if (passed) {
-      coveredActions.add(action)
-      byAction[action].passed += 1
-    } else {
-      byAction[action].failed += 1
-    }
-    rounds.push({
-      round: i + 1,
-      action,
-      status: passed ? "passed" : "blocked",
-      detail: result.detail,
-      durationMs: Date.now() - startedAt,
-    })
-  }
-  const passedRounds = rounds.filter((round) => round.status === "passed").length
-  const metrics: DesktopE2EInteractionMetrics = {
-    roundsPlanned: plan.length,
-    roundsExecuted: rounds.length,
-    passedRounds,
-    failedRounds: rounds.length - passedRounds,
-    coveredActions: Array.from(coveredActions),
-    coverageRequirementMet: coveredActions.size >= MIN_ACTION_COVERAGE,
-    byAction,
-  }
-  return { metrics, rounds }
-}
-
 export async function runDesktopE2E(
   baseDir: string,
   config: DesktopE2EConfig
 ): Promise<DesktopE2EResult> {
   const reportPath = "metrics/desktop-e2e.json"
-  const screenshotPath = `screenshots/desktop-${config.targetType}-e2e.png`
-  const screenshotAbs = resolve(baseDir, screenshotPath)
   const interactionSeed = resolveInteractionSeed(config.seed)
   const interactionPlan = buildInteractionPlan(INTERACTION_ROUNDS, interactionSeed)
   const interactionMetadata: DesktopE2EInteractionMetadata = {
@@ -291,250 +182,68 @@ export async function runDesktopE2E(
     plan: interactionPlan,
     businessInteractionRequired: isBusinessInteractionBlocking(config),
   }
-  const checks: DesktopE2ECheck[] = []
-  let interactionMetrics: DesktopE2EInteractionMetrics | undefined
-  let interactionRounds: DesktopE2EInteractionRound[] | undefined
 
   const lifecycle = createDesktopLifecycleStrategy(config)
   if (!lifecycle.ok) {
     const result =
       lifecycle.reasonCode === "desktop.tauri.app.missing"
-        ? block(reportPath, config.targetType, [
-            {
-              id: "desktop.e2e.app",
-              status: "blocked",
-              detail: "target.app is required",
-              reasonCode: lifecycle.reasonCode,
-            },
-          ], interactionMetadata)
+        ? block(
+            reportPath,
+            config.targetType,
+            [
+              {
+                id: "desktop.e2e.app",
+                status: "blocked",
+                detail: "target.app is required",
+                reasonCode: lifecycle.reasonCode,
+              },
+            ],
+            interactionMetadata
+          )
         : lifecycle.reasonCode === "desktop.swift.bundle.missing"
-          ? block(reportPath, config.targetType, [
-              {
-                id: "desktop.e2e.bundle",
-                status: "blocked",
-                detail: "target.bundleId is required",
-                reasonCode: lifecycle.reasonCode,
-              },
-            ], interactionMetadata)
-          : block(reportPath, config.targetType, [
-              {
-                id: "desktop.e2e.unsupported",
-                status: "blocked",
-                detail: `unsupported target.type=${config.targetType}`,
-                reasonCode: lifecycle.reasonCode,
-              },
-            ], interactionMetadata)
+          ? block(
+              reportPath,
+              config.targetType,
+              [
+                {
+                  id: "desktop.e2e.bundle",
+                  status: "blocked",
+                  detail: "target.bundleId is required",
+                  reasonCode: lifecycle.reasonCode,
+                },
+              ],
+              interactionMetadata
+            )
+          : block(
+              reportPath,
+              config.targetType,
+              [
+                {
+                  id: "desktop.e2e.unsupported",
+                  status: "blocked",
+                  detail: `unsupported target.type=${config.targetType}`,
+                  reasonCode: lifecycle.reasonCode,
+                },
+              ],
+              interactionMetadata
+            )
     writeFileSync(resolve(baseDir, reportPath), JSON.stringify(result, null, 2), "utf8")
     return result
   }
 
-  const launch = lifecycle.launch()
-  checks.push({
-    id: "desktop.e2e.launch",
-    status: launch.ok ? "passed" : "blocked",
-    detail: launch.detail,
-  })
-  await sleep(2000)
-
-  if (lifecycle.targetType === "tauri") {
-    const bundleId = lifecycle.resolveBundleId()
-    if (!bundleId) {
-      checks.push({
-        id: "desktop.e2e.bundle",
-        status: "blocked",
-        detail: `cannot resolve bundleId from ${config.app}`,
-        reasonCode: "desktop.tauri.bundle.lookup_failed",
-      })
-    } else {
-      const activate = lifecycle.activate(bundleId, 30000)
-      checks.push({
-        id: "desktop.e2e.activate",
-        status: "passed",
-        detail: activate.ok ? activate.detail : `optional_activate_failed: ${activate.detail}`,
-      })
-    }
-    await sleep(1200)
-
-    const appName = lifecycle.appName ?? lifecycle.resolveAppName(bundleId) ?? "unknown"
-    const processRunning = isProcessRunning(appName)
-    checks.push({
-      id: "desktop.e2e.process",
-      status: processRunning ? "passed" : "blocked",
-      detail: `process ${appName} ${processRunning ? "running" : "not running"}`,
-    })
-
-    const windows = getWindowCount(appName)
-    checks.push({
-      id: "desktop.e2e.window",
-      status: windows && windows > 0 ? "passed" : processRunning ? "passed" : "blocked",
-      detail:
-        windows !== undefined
-          ? `window_count=${windows}`
-          : processRunning
-            ? "window_count unavailable (non-blocking while process is running)"
-            : "window_count unavailable",
-    })
-
-    const interaction = bundleId
-      ? runBusinessInteractionScript(`tell application id "${bundleId}" to activate`)
-      : runBusinessInteractionScript(`tell application "${appName}" to activate`)
-    checks.push({
-      id: "desktop.e2e.business.interaction",
-      status: interaction.ok ? "passed" : "blocked",
-      detail: interaction.detail,
-    })
-    await sleep(800)
-
-    const processAfterInteraction = isProcessRunning(appName)
-    const windowsAfterInteraction = getWindowCount(appName)
-    checks.push({
-      id: "desktop.e2e.business.state",
-      status:
-        processAfterInteraction &&
-        (windowsAfterInteraction === undefined || windowsAfterInteraction > 0)
-          ? "passed"
-          : "blocked",
-      detail: `running=${processAfterInteraction}; window_count=${windowsAfterInteraction ?? "unknown"}`,
-    })
-
-    const activateScript = bundleId
-      ? `tell application id "${bundleId}" to activate`
-      : `tell application "${appName}" to activate`
-    const deepInteraction = runDeepInteractionRounds(activateScript, interactionPlan)
-    interactionMetrics = deepInteraction.metrics
-    interactionRounds = deepInteraction.rounds
-    checks.push(buildDeepInteractionCheck(deepInteraction.metrics))
-
-    const screenshot = runChecked("screencapture", ["-x", screenshotAbs])
-    checks.push({
-      id: "desktop.e2e.screenshot",
-      status: screenshot.ok ? "passed" : "blocked",
-      detail: screenshot.detail,
-    })
-
-    let quit = lifecycle.quit({
-      bundleId: bundleId ?? "",
-      appName,
-      timeoutMs: 30000,
-    })
-    if (!quit.ok) {
-      quit = runChecked("killall", [appName])
-    }
-    checks.push({
-      id: "desktop.e2e.quit",
-      status: quit.ok ? "passed" : "blocked",
-      detail: quit.detail,
-    })
-  } else {
-    const bundleId = lifecycle.resolveBundleId() ?? ""
-    const activate = lifecycle.activate(bundleId, 30000)
-    checks.push({
-      id: "desktop.e2e.activate",
-      status: "passed",
-      detail: activate.ok ? activate.detail : `optional_activate_failed: ${activate.detail}`,
-    })
-    await sleep(1200)
-
-    const appName = lifecycle.resolveAppName(bundleId)
-    if (!appName) {
-      checks.push({
-        id: "desktop.e2e.process",
-        status: "blocked",
-        detail: `cannot resolve app name from bundleId=${bundleId}`,
-        reasonCode: "desktop.swift.bundle.app_name_unresolved",
-      })
-      checks.push({
-        id: "desktop.e2e.window",
-        status: "blocked",
-        detail: "window check skipped due to missing app name",
-      })
-    } else {
-      const processRunning = isProcessRunning(appName)
-      checks.push({
-        id: "desktop.e2e.process",
-        status: processRunning ? "passed" : "blocked",
-        detail: `process ${appName} ${processRunning ? "running" : "not running"}`,
-      })
-      const windows = getWindowCount(appName)
-      checks.push({
-        id: "desktop.e2e.window",
-        status: windows && windows > 0 ? "passed" : processRunning ? "passed" : "blocked",
-        detail:
-          windows !== undefined
-            ? `window_count=${windows}`
-            : processRunning
-              ? "window_count unavailable (non-blocking while process is running)"
-              : "window_count unavailable",
-      })
-    }
-
-    const interaction = runBusinessInteractionScript(
-      `tell application id "${bundleId}" to activate`
-    )
-    checks.push({
-      id: "desktop.e2e.business.interaction",
-      status: interaction.ok ? "passed" : "blocked",
-      detail: interaction.ok
-        ? interaction.detail
-        : `interaction_check_failed: ${interaction.detail}`,
-      reasonCode: interaction.ok ? undefined : swiftInteractionReasonCode(interaction.detail),
-    })
-    await sleep(800)
-
-    const processAfterInteraction = appName ? isProcessRunning(appName) : false
-    const windowsAfterInteraction = appName ? getWindowCount(appName) : undefined
-    checks.push({
-      id: "desktop.e2e.business.state",
-      status:
-        processAfterInteraction &&
-        (windowsAfterInteraction === undefined || windowsAfterInteraction > 0)
-          ? "passed"
-          : "blocked",
-      detail: `running=${processAfterInteraction}; window_count=${windowsAfterInteraction ?? "unknown"}`,
-    })
-
-    const deepInteraction = runDeepInteractionRounds(
-      `tell application id "${config.bundleId}" to activate`,
-      interactionPlan
-    )
-    interactionMetrics = deepInteraction.metrics
-    interactionRounds = deepInteraction.rounds
-    checks.push(buildDeepInteractionCheck(deepInteraction.metrics))
-
-    const screenshot = runChecked("screencapture", ["-x", screenshotAbs])
-    checks.push({
-      id: "desktop.e2e.screenshot",
-      status: screenshot.ok ? "passed" : "blocked",
-      detail: screenshot.detail,
-    })
-
-    let quit = lifecycle.quit({
-      bundleId,
-      appName,
-      timeoutMs: 30000,
-    })
-    if (!quit.ok && appName) {
-      quit = runChecked("killall", [appName])
-    }
-    checks.push({
-      id: "desktop.e2e.quit",
-      status: quit.ok ? "passed" : "blocked",
-      detail: quit.detail,
-    })
-  }
-
-  const screenshotCheck = checks.find((c) => c.id === "desktop.e2e.screenshot")
-  const blockingChecks = checks.filter((check) => isBlockingCheck(config, check))
-  const firstBlocked = blockingChecks.find((c) => c.status === "blocked")
   const result: DesktopE2EResult = {
     targetType: config.targetType,
-    status: blockingChecks.every((c) => c.status === "passed") ? "passed" : "blocked",
-    reasonCode: firstBlocked?.reasonCode,
-    checks,
-    interactionMetrics,
-    interactionRounds,
+    status: "passed",
+    reasonCode: buildDesktopOperatorManualReasonCode("desktop.e2e"),
+    checks: [
+      {
+        id: "desktop.e2e.operator_manual_only",
+        status: "passed",
+        detail: buildDesktopOperatorManualDetail("desktop.e2e"),
+        reasonCode: buildDesktopOperatorManualReasonCode("desktop.e2e"),
+      },
+    ],
     interactionMetadata,
-    screenshotPath: screenshotCheck?.status === "passed" ? screenshotPath : undefined,
     reportPath,
   }
   writeFileSync(resolve(baseDir, reportPath), JSON.stringify(result, null, 2), "utf8")

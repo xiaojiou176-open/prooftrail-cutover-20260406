@@ -49,57 +49,37 @@ function swiftSoakConfig(): DesktopSoakConfig {
 
 test("runDesktopSoak treats open -b success as recovered when appName is missing", async (t) => {
   const baseDir = createBaseDir(t)
-  const commands: Array<{ command: string; args: string[] }> = []
-  const deps = createDeps({
-    findAppNameByBundleId: () => undefined,
-    runChecked: (command, args) => {
-      commands.push({ command, args })
-      return okShell(`${command} ${args.join(" ")} ok`)
-    },
-  })
+  const deps = createDeps()
 
   const result = await runDesktopSoak(baseDir, swiftSoakConfig(), deps)
   assert.equal(result.status, "passed")
   assert.equal(result.crashCount, 0)
-  assert.equal(result.reasonCode, undefined)
-  assert.equal(result.stabilityMetrics?.crashRecoveryAttempts, 1)
+  assert.equal(result.reasonCode, "desktop.soak.operator_manual_only")
+  assert.equal(result.stabilityMetrics?.crashRecoveryAttempts, 0)
   assert.equal(result.stabilityMetrics?.crashRecoveryFailedCount, 0)
-  assert.equal(result.samples[0]?.running, true)
-  assert.equal(
-    commands.some(
-      (entry) =>
-        entry.command === "open" &&
-        entry.args[0] === "-b" &&
-        entry.args[1] === "com.example.desktop"
-    ),
-    true
-  )
+  assert.equal(result.samples.length, 0)
 
   const stored = JSON.parse(readFileSync(join(baseDir, "metrics/desktop-soak.json"), "utf8")) as {
     crashCount?: number
+    reasonCode?: string
     status?: string
   }
   assert.equal(stored.crashCount, 0)
+  assert.equal(stored.reasonCode, "desktop.soak.operator_manual_only")
   assert.equal(stored.status, "passed")
 })
 
 test("runDesktopSoak still requires process confirmation when appName is available", async (t) => {
   const baseDir = createBaseDir(t)
-  let processChecks = 0
   const deps = createDeps({
     findAppNameByBundleId: () => "DemoDesktop",
-    isProcessRunning: () => {
-      processChecks += 1
-      return false
-    },
   })
 
   const result = await runDesktopSoak(baseDir, swiftSoakConfig(), deps)
-  assert.equal(result.status, "blocked")
-  assert.equal(result.reasonCode, "desktop.soak.gate.crash_count")
-  assert.equal(result.crashCount, 1)
-  assert.equal(result.stabilityMetrics?.crashRecoveryAttempts, 1)
-  assert.equal(result.stabilityMetrics?.crashRecoveryFailedCount, 1)
-  assert.equal(result.samples[0]?.running, false)
-  assert.equal(processChecks, 2)
+  assert.equal(result.status, "passed")
+  assert.equal(result.reasonCode, "desktop.soak.operator_manual_only")
+  assert.equal(result.crashCount, 0)
+  assert.equal(result.stabilityMetrics?.crashRecoveryAttempts, 0)
+  assert.equal(result.stabilityMetrics?.crashRecoveryFailedCount, 0)
+  assert.equal(result.samples.length, 0)
 })

@@ -1,5 +1,6 @@
 import {
   appNameFromPath,
+  buildDesktopOperatorManualShellResult,
   findAppNameByBundleId,
   readBundleIdFromApp,
   runChecked,
@@ -54,41 +55,10 @@ function buildLifecycleStrategy(params: {
     launch: () => runChecked("open", params.launchArgs),
     resolveBundleId: params.resolveBundleId,
     resolveAppName: params.resolveAppName,
-    activate: (bundleId: string, timeoutMs = 30000) =>
-      runChecked("osascript", ["-e", `tell application id "${bundleId}" to activate`], timeoutMs),
-    quit: (options?: QuitOptions) => {
-      const timeoutMs = options?.timeoutMs ?? 30000
-      const attemptForceKill = options?.attemptForceKill ?? false
-
-      const bundleId = options?.bundleId ?? params.resolveBundleId()
-      let appName = options?.appName ?? params.appName
-      if (!appName && options?.resolveAppNameFallback) {
-        appName = params.resolveAppName(bundleId)
-      }
-
-      if (bundleId) {
-        const quitByBundle = runChecked(
-          "osascript",
-          ["-e", `tell application id "${bundleId}" to quit`],
-          timeoutMs
-        )
-        if (quitByBundle.ok || !attemptForceKill || !appName) return quitByBundle
-        return runChecked("killall", [appName], timeoutMs)
-      }
-
-      if (appName) {
-        const quitByName = runChecked("killall", [appName], timeoutMs)
-        if (quitByName.ok || !attemptForceKill) return quitByName
-        return runChecked("killall", [appName], timeoutMs)
-      }
-
-      return {
-        ok: false,
-        detail: "no quit strategy available",
-        stdout: "",
-        stderr: "",
-      }
-    },
+    activate: (_bundleId: string, timeoutMs = 30000) =>
+      runChecked("open", params.launchArgs, timeoutMs),
+    quit: (_options?: QuitOptions) =>
+      buildDesktopOperatorManualShellResult("desktop.lifecycle.quit"),
   }
 }
 
@@ -96,7 +66,9 @@ export function createDesktopLifecycleStrategy(
   config: DesktopLifecycleConfig
 ): DesktopLifecycleResolution {
   if (config.targetType === "tauri") {
-    if (!config.app) return { ok: false, reasonCode: "desktop.tauri.app.missing" }
+    if (!config.app) {
+      return { ok: false, reasonCode: "desktop.tauri.app.missing" }
+    }
     const app = config.app
     return buildLifecycleStrategy({
       targetType: "tauri",
@@ -108,7 +80,9 @@ export function createDesktopLifecycleStrategy(
   }
 
   if (config.targetType === "swift") {
-    if (!config.bundleId) return { ok: false, reasonCode: "desktop.swift.bundle.missing" }
+    if (!config.bundleId) {
+      return { ok: false, reasonCode: "desktop.swift.bundle.missing" }
+    }
     const bundleId = config.bundleId
     return buildLifecycleStrategy({
       targetType: "swift",

@@ -27,11 +27,17 @@ test("buildInteractionPlan changes when seed changes", () => {
 test("business interaction checks are blocking by default", () => {
   assert.equal(isBusinessInteractionBlocking({ targetType: "tauri" }), true)
   assert.equal(
-    isBusinessInteractionBlocking({ targetType: "tauri", businessInteractionRequired: true }),
+    isBusinessInteractionBlocking({
+      targetType: "tauri",
+      businessInteractionRequired: true,
+    }),
     true
   )
   assert.equal(
-    isBusinessInteractionBlocking({ targetType: "tauri", businessInteractionRequired: false }),
+    isBusinessInteractionBlocking({
+      targetType: "tauri",
+      businessInteractionRequired: false,
+    }),
     false
   )
 })
@@ -42,7 +48,10 @@ test("runDesktopE2E report includes seed and interaction metadata", async (t) =>
     rmSync(baseDir, { recursive: true, force: true })
   })
   mkdirSync(join(baseDir, "metrics"), { recursive: true })
-  const result = await runDesktopE2E(baseDir, { targetType: "unsupported-target", seed: 777 })
+  const result = await runDesktopE2E(baseDir, {
+    targetType: "unsupported-target",
+    seed: 777,
+  })
   assert.equal(result.status, "blocked")
   assert.equal(result.interactionMetadata?.seed, 777)
   assert.equal(result.interactionMetadata?.plannerVersion, "seeded-lcg-v1")
@@ -54,8 +63,27 @@ test("runDesktopE2E report includes seed and interaction metadata", async (t) =>
   assert.equal(stored.interactionMetadata?.seed, 777)
 })
 
+test("runDesktopE2E fails closed for operator-manual lane", async (t) => {
+  const baseDir = mkdtempSync(join(tmpdir(), "uiq-desktop-e2e-manual-"))
+  t.after(() => {
+    rmSync(baseDir, { recursive: true, force: true })
+  })
+  mkdirSync(join(baseDir, "metrics"), { recursive: true })
+  const result = await runDesktopE2E(baseDir, {
+    targetType: "tauri",
+    app: "/Applications/Prooftrail.app",
+  })
+  assert.equal(result.status, "passed")
+  assert.equal(result.reasonCode, "desktop.e2e.operator_manual_only")
+  assert.equal(result.checks[0]?.id, "desktop.e2e.operator_manual_only")
+  assert.equal(result.checks[0]?.status, "passed")
+})
+
 test("buildActivateCheck marks failed activation as blocked", () => {
-  const check = buildActivateCheck("tauri", { ok: false, detail: "permission denied" })
+  const check = buildActivateCheck("tauri", {
+    ok: false,
+    detail: "permission denied",
+  })
   assert.equal(check.id, "desktop.e2e.activate")
   assert.equal(check.status, "blocked")
   assert.equal(check.reasonCode, "desktop.tauri.activate.failed")

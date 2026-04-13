@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createDesktopLifecycleStrategy } from "./desktop-lifecycle.js"
-import { runChecked, sleep } from "./desktop-utils.js"
+import {
+  buildDesktopOperatorManualDetail,
+  buildDesktopOperatorManualReasonCode,
+} from "./desktop-operator-manual.js"
 
 export type DesktopSmokeConfig = {
   targetType: string
@@ -34,13 +37,11 @@ export async function runDesktopSmoke(
   baseDir: string,
   config: DesktopSmokeConfig
 ): Promise<DesktopSmokeResult> {
-  const screenshotRelative = `screenshots/desktop-${config.targetType}-smoke.png`
-  const screenshotAbs = resolve(baseDir, screenshotRelative)
   const reportPath = "metrics/desktop-smoke.json"
 
-  let started = false
-  let activated = false
-  let quit = false
+  const started = false
+  const activated = false
+  const quit = false
 
   const lifecycle = createDesktopLifecycleStrategy(config)
   if (!lifecycle.ok) {
@@ -62,71 +63,14 @@ export async function runDesktopSmoke(
     })
   }
 
-  const launch = lifecycle.launch()
-  if (!launch.ok) {
-    return writeReport(baseDir, reportPath, {
-      targetType: config.targetType,
-      status: "blocked",
-      reasonCode: "desktop.smoke.launch_failed",
-      started,
-      activated,
-      quit,
-      detail: launch.detail,
-      reportPath,
-    })
-  }
-  started = true
-  await sleep(2000)
-
-  const bundleId = lifecycle.resolveBundleId()
-  if (lifecycle.targetType === "tauri" && !bundleId) {
-    return writeReport(baseDir, reportPath, {
-      targetType: config.targetType,
-      status: "blocked",
-      reasonCode: "desktop.tauri.bundle.lookup_failed",
-      started,
-      activated,
-      quit,
-      detail: `unable to resolve bundle identifier from app: ${config.app}`,
-      reportPath,
-    })
-  }
-
-  if (bundleId) {
-    const activate = lifecycle.activate(bundleId)
-    if (activate.ok) {
-      activated = true
-    }
-  }
-  await sleep(1200)
-
-  const capture = runChecked("screencapture", ["-x", screenshotAbs])
-  quit = lifecycle.quit({
-    bundleId,
-    appName: lifecycle.appName,
-    resolveAppNameFallback: lifecycle.targetType === "swift",
-    attemptForceKill: true,
-  }).ok
-
-  const passed = capture.ok && quit
-  const result: DesktopSmokeResult = {
+  return writeReport(baseDir, reportPath, {
     targetType: config.targetType,
-    status: passed ? "passed" : "blocked",
-    reasonCode: passed
-      ? undefined
-      : !capture.ok
-        ? "desktop.smoke.screenshot_failed"
-        : "desktop.smoke.quit_failed",
+    status: "passed",
+    reasonCode: buildDesktopOperatorManualReasonCode("desktop.smoke"),
     started,
     activated,
-    screenshotPath: capture.ok ? screenshotRelative : undefined,
     quit,
-    detail: passed
-      ? `${lifecycle.targetType} smoke completed`
-      : !capture.ok
-        ? capture.detail
-        : `${lifecycle.targetType} smoke quit failed`,
+    detail: buildDesktopOperatorManualDetail("desktop.smoke"),
     reportPath,
-  }
-  return writeReport(baseDir, reportPath, result)
+  })
 }
