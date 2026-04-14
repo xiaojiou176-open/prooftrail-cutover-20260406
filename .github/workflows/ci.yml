@@ -294,7 +294,7 @@ jobs:
         run: bash scripts/ci/hooks-equivalence-gate.sh
       - name: Upload hooks equivalence artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: hooks-equivalence-gate
           path: |
@@ -1420,7 +1420,7 @@ jobs:
           UIQ_MUTATION_PY_MIN_TOTAL: "249"
         run: bash scripts/ci/run-in-container.sh --task mutation-effective --gate ci-mutation-effective
       - name: Upload mutation reports
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ always() }}
         with:
           name: mutation-reports
@@ -1455,7 +1455,7 @@ jobs:
         run: pnpm governance:control-plane:check
       - name: Upload governance score report
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: governance-score-report
           path: |
@@ -1623,7 +1623,7 @@ jobs:
             --schema contracts/true-green-manifest.schema.json \
             --input .runtime-cache/artifacts/ci/true-green-manifest-ci.json
       - name: Upload repo-truth true-green manifest (ci)
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: uiq-ci-true-green-manifest
           path: .runtime-cache/artifacts/ci/true-green-manifest-ci.json
