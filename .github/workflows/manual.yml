@@ -172,7 +172,7 @@ jobs:
         run: node --import tsx scripts/ci/uiq-ai-review.mjs --profile manual --strict true --severity-threshold high --max-artifacts 40 --emit-issue false --emit-pr-comment false
       - name: Upload AI review artifacts (always)
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: uiq-manual-ai-review
           path: |
@@ -248,7 +248,7 @@ jobs:
         run: node scripts/ci/governance-trend-report.mjs
       - name: Upload pre-commit strict manual summary artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: precommit-strict-manual-summary
           path: |
@@ -258,7 +258,7 @@ jobs:
           if-no-files-found: error
       - name: Upload governance trend report artifact
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: governance-trend-report
           path: |
@@ -278,7 +278,7 @@ jobs:
       - name: Upload Release Notes Artifact (non-blocking)
         if: ${{ always() }}
         continue-on-error: true
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-notes-vnext
           path: .runtime-cache/artifacts/release/release-notes-vnext.md
@@ -293,7 +293,7 @@ jobs:
     steps:
       - uses: ./.github/actions/repo-checkout
       - name: Upload Artifacts
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: uiq-manual-run
           path: |
@@ -351,7 +351,7 @@ jobs:
         run: node scripts/ci/verify-run-evidence.mjs --profile swift.regression
       - name: Upload Desktop Regression Artifacts
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: uiq-manual-desktop-regression
           path: |
